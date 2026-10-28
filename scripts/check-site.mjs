@@ -3,7 +3,7 @@ import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { load } from 'cheerio';
-import { site, nodes, sourcePath } from './lib.mjs';
+import { site, nodes, sourcePath, canonicalPath } from './lib.mjs';
 
 const entries = await readdir('dist',{recursive:true});
 const htmlFiles = entries.filter(p=>p.endsWith('.html'));
@@ -44,8 +44,14 @@ for(const [file,{$}] of documents) {
   }
 }
 const headings=JSON.parse(await readFile('src/generated/headings.json','utf8'));
+const schemaPage=documents.get('specification/2026-07-28/schema/index.html');
+if(schemaPage){
+  const original=load(await readFile('translations/zh-CN/specification/2026-07-28/schema.mdx','utf8'));
+  const signatureText=$=>$('.tsd-signature,.tsd-anchor-link[id]').map((_,el)=>$(el).text()).get();
+  assert.deepEqual(signatureText(schemaPage.$),signatureText(original),'Rendered Schema type signatures or property declarations changed');
+}
 for(const page of site.pages) {
-  const doc=documents.get(`${page.path}/index.html`);
+  const doc=documents.get(`${canonicalPath(page.path)}/index.html`);
   assert.ok(doc,`Missing translation page ${page.path}`);
   for(const id of headings[page.path]) if(!doc.ids.has(id)) errors.push(`${page.path}: lost original anchor ${id}`);
   const expected=nodes(await readFile(sourcePath(page),'utf8'),'code').filter(n=>n.lang!=='mermaid').length;

@@ -1,0 +1,398 @@
+---
+title: 概述
+---
+
+<div id="enable-section-numbers" />
+
+Model Context Protocol 由若干相互协作的关键部分组成：
+
+- **基础协议**：核心 JSON-RPC 消息类型
+- **版本管理与兼容性**：协议版本协商、扩展协商，以及与早期协议修订版的互操作
+- **消息模式**：核心协议支持的消息交互模式，包括请求与响应、多轮往返请求（MRTR）以及订阅与通知
+- **授权**：面向基于 HTTP 的传输方式的身份验证与授权框架
+- **服务器功能**：服务器提供的资源、提示模板和工具
+- **客户端功能**：客户端提供的信息征询、采样和根目录列表
+- **实用功能**：日志记录、参数补全等跨越多个功能的通用能力
+
+所有实现都**必须**支持基础协议、版本管理和消息模式。其他部分则**可以**根据应用的具体需求实现。
+
+这些协议层既清晰划分了职责，又支持客户端与服务器之间丰富的交互。模块化设计使各个实现能够恰好支持自身所需的功能。
+
+## 消息
+
+MCP 客户端与服务器之间的所有消息都**必须**遵循 [JSON-RPC 2.0](https://www.jsonrpc.org/specification) 规范。协议定义了以下消息类型：
+
+### 请求
+
+[请求](/specification/2026-07-28/schema#jsonrpcrequest)由客户端发送给服务器，用于发起一项操作。
+
+```typescript
+{
+  jsonrpc: "2.0";
+  id: string | number;
+  method: string;
+  params?: {
+    [key: string]: unknown;
+  };
+}
+```
+
+- 请求**必须**包含字符串或整数 ID。
+- 与基础 JSON-RPC 不同，该 ID **不得**为 `null`。
+- 请求 ID **不得**与发送方已发出但尚未收到响应的任何其他请求的 ID 相同。
+
+### 响应
+
+响应用于回复请求，包含操作的结果或错误。
+
+#### 结果响应
+
+操作成功完成时，会发送[结果响应](/specification/2026-07-28/schema#jsonrpcresultresponse)。
+
+```typescript
+{
+  jsonrpc: "2.0";
+  id: string | number;
+  result: {
+    resultType: string;
+    [key: string]: unknown;
+  };
+}
+```
+
+- 结果响应**必须**包含与对应请求相同的 ID。
+- 结果响应**必须**包含 `result` 字段。
+- `result` **可以**采用任意 JSON 对象结构。
+- `result` **必须**包含 `resultType` 字段，标明结果类型。
+
+##### ResultType
+
+结果中的 `resultType` 字段表明所返回结果的类型。MCP 支持多态结果类型，允许服务器根据请求的处理结果返回不同结构。`resultType` 是字符串，客户端可以据此判断如何解析和处理 `result` 对象。
+
+- `resultType` 为 `"complete"`，表示请求成功完成，结果包含最终内容。
+- `resultType` 为 `"input_required"`，表示请求尚未完成，需要更多信息才能处理；结果包含一个 [`InputRequiredResult`](/specification/2026-07-28/basic/patterns/mrtr#inputrequiredresult) 对象，其中提供了所需补充信息的相关内容。
+- 扩展**可以**增加其他 `ResultType` 值。受支持的 `ResultType` 值集合，**必须**由核心协议定义的集合，以及通过能力声明支持的扩展所增加的值共同组成。
+- 如果客户端无法识别某个 `resultType` 值，就**必须**将其视为无效。
+- 为兼容未包含 `resultType` 的早期协议版本服务器，客户端**必须**将缺失的 `resultType` 视为 `"complete"`。
+
+#### 错误响应
+
+操作失败或遇到错误时，会发送[错误响应](/specification/2026-07-28/schema#jsonrpcerrorresponse)。
+
+```typescript
+{
+  jsonrpc: "2.0";
+  id?: string | number;
+  error: {
+    code: number;
+    message: string;
+    data?: unknown;
+  }
+}
+```
+
+- 错误响应**必须**包含与对应请求相同的 ID；但因请求格式错误而无法读取 ID 的错误情况除外。
+- 错误响应**必须**包含 `error` 字段，其中带有 `code` 和 `message`。
+- 错误码**必须**是整数。
+- 错误响应**可以**包含 `data` 成员，用于提供任意类型的补充信息，例如嵌套错误。
+
+#### 错误码
+
+MCP 使用标准 JSON-RPC 2.0 错误码（`-32700`、`-32600` 至 `-32603`）表示一般协议错误。
+
+JSON-RPC 2.0 将 `-32000` 至 `-32099` 范围保留给由实现自行定义的服务器错误。MCP 将这一范围划分如下：
+
+- **`-32000` 至 `-32019`——旧版范围。** 该子范围内的错误码，是各实现在本政策引入之前分配的。新错误码**不得**再分配到该子范围，新实现也**不应当**使用其中的任何错误码。除 `-32002`（见下文）外，接收方**不得**假定这些错误码具有任何特定含义。
+- **`-32020` 至 `-32099`——保留给 MCP 规范。** 该子范围内的错误码仅由 MCP 规范定义，并记录于 [Schema](/specification/2026-07-28/schema)。实现**不得**发送该子范围内、未由本规范定义的错误码；对于已定义的错误码，也**必须**仅按规定的含义使用。
+
+MCP 定义了以下错误码：
+
+| 错误码 | 名称 |
+| -------- | ---------------------------------------------------------------------------------------------------------- |
+| `-32020` | [`HeaderMismatch`](/specification/2026-07-28/schema#headermismatcherror) |
+| `-32021` | [`MissingRequiredClientCapability`](/specification/2026-07-28/schema#missingrequiredclientcapabilityerror) |
+| `-32022` | [`UnsupportedProtocolVersion`](/specification/2026-07-28/schema#unsupportedprotocolversionerror) |
+
+早期协议版本定义的错误码仍被保留，不会重新分配。实现本协议版本时，**不得**发送以下错误码：
+
+- `-32002`——未找到资源，适用于 2025-11-25 及更早版本，现由 `-32602` 取代。对于实现早期版本的服务器，客户端[**应当**仍然接受 `-32002`](/specification/2026-07-28/server/resources#error-handling)。
+- `-32042`——需要 URL 信息征询，仅适用于 2025-11-25。
+
+完全发生在实现内部的本地错误，例如 SDK 内部触发的请求超时，目前尚未由本规范分配错误码。实现若以类似 JSON-RPC 的结构向外呈现本地错误，应确保它们不会被误认为是从对端收到的错误。未来规范版本可能在保留子范围内，为常见本地错误定义标准错误码。
+
+对于本规范尚未定义用途的新错误码，**应当**在 JSON-RPC 保留范围（`-32768` 至 `-32000`）之外分配；剩余整数空间均可用于应用自行定义的错误。
+
+### 通知
+
+[通知](/specification/2026-07-28/schema#jsonrpcnotification)是单向消息，既可以由客户端发给服务器，也可以反向发送。接收方**不得**发送响应。
+
+```typescript
+{
+  jsonrpc: "2.0";
+  method: string;
+  params?: {
+    [key: string]: unknown;
+  };
+}
+```
+
+- 通知**不得**包含 ID。
+
+### 消息模式
+
+Model Context Protocol（MCP）支持多种[消息模式](/specification/2026-07-28/basic/patterns)，用来定义客户端与服务器如何交互：
+
+1. **[请求与响应](/specification/2026-07-28/basic/patterns#request-and-response)**：客户端向服务器发送请求，服务器返回结果或错误。
+2. **[多轮往返请求（MRTR）](/specification/2026-07-28/basic/patterns#multi-round-trip-requests)**：服务器需要额外的客户端输入（采样、信息征询或根目录）才能完成请求。
+3. **[订阅与通知](/specification/2026-07-28/basic/patterns#subscribe-and-notify)**：客户端订阅来自服务器的通知流，服务器在事件发生时发送对应通知。
+
+## 无状态性
+
+Model Context Protocol（MCP）是一种**无状态协议**：处理请求所需的全部信息都包含在请求本身中。服务器独立处理每个请求，不应根据先前请求推断状态，即使这些请求位于同一条连接或流上。
+
+具体要求如下：
+
+- 服务器**不得**依赖同一连接上的先前请求建立上下文，例如能力、协议版本和客户端身份。每个请求都通过自己的 [`_meta`](#_meta) 字段提供这些元数据。
+- 服务器**应当**准备好处理与多个任务、线程或会话关联的请求。
+- 服务器**不应当**要求客户端复用同一条连接或同一个进程来执行相关操作。
+- 客户端**不应当**将单个任务、线程或会话作为 stdio 进程的生命周期边界。
+- 需要跨越多个请求保留的状态，例如长时间运行的任务或应用级句柄，**必须**通过明确的标识符引用，并由客户端在每个请求中传递该标识符。
+
+<Note>
+  这意味着一条已打开的连接，例如一个 STDIO 进程，并不代表某段对话或某个会话：客户端可以在同一个传输通道上交错发送互不相关的请求；服务器不得将连接或进程身份，视为对话或会话连续性的替代标识。
+</Note>
+
+像 [`subscriptions/listen`](/specification/2026-07-28/basic/patterns/subscriptions) 这样的长时间运行请求，仍然属于请求／响应模式，只不过其响应是一条持续打开的通知流。这些请求的状态限定于请求本身，而非底层连接。
+
+<Info>
+  要了解逐请求模型如何映射到 SDK 代码，请参阅[架构指南](/docs/2026-07-28/learn/architecture#example)。
+</Info>
+
+## 身份验证与授权
+
+MCP 提供了适用于 HTTP 的[授权](/specification/2026-07-28/basic/authorization)框架。使用基于 HTTP 的传输方式的实现**应当**遵循该规范；使用 STDIO 传输的实现则**不应当**遵循它，而应从环境中获取凭据。
+
+此外，客户端和服务器**可以**协商自己的自定义身份验证与授权策略。
+
+有关 MCP 身份验证与授权机制的进一步讨论，以及如何为其演进作出贡献，欢迎加入 [GitHub Discussions](https://github.com/modelcontextprotocol/specification/discussions)，共同塑造协议的未来！
+
+## Schema
+
+协议的完整规范通过 [TypeScript Schema](https://github.com/modelcontextprotocol/specification/blob/main/schema/2026-07-28/schema.ts) 定义。它是全部协议消息和结构的权威来源。
+
+此外，还提供从 TypeScript 权威源码自动生成的 [JSON Schema](https://github.com/modelcontextprotocol/specification/blob/main/schema/2026-07-28/schema.json)，供各种自动化工具使用。
+
+## JSON Schema 用法
+
+Model Context Protocol 在整个协议中使用 JSON Schema 进行校验。本节说明 MCP 消息中应如何使用 JSON Schema。
+
+### Schema 方言
+
+MCP 支持 JSON Schema，并遵循以下规则：
+
+1. **默认方言**：Schema 不包含 `$schema` 字段时，默认使用 [JSON Schema 2020-12](https://json-schema.org/draft/2020-12/schema)
+1. **显式方言**：Schema 可以包含 `$schema` 字段，指定不同方言
+1. **支持的方言**：实现必须至少支持 2020-12，并应当记录它还支持哪些其他方言
+1. **建议**：建议实现者使用 JSON Schema 2020-12。
+
+### 用法示例
+
+#### 默认方言（2020-12）：
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "age": { "type": "integer", "minimum": 0 }
+  },
+  "required": ["name"]
+}
+```
+
+#### 显式方言（draft-07）：
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "age": { "type": "integer", "minimum": 0 }
+  },
+  "required": ["name"]
+}
+```
+
+### 实现要求
+
+- 对于未明确提供 `$schema` 字段的 Schema，客户端与服务器都**必须**支持 JSON Schema 2020-12
+- 客户端与服务器**必须**按照 Schema 声明的方言或默认方言进行校验。对于不受支持的方言，双方都**必须**妥善处理，并返回适当错误，说明该方言不受支持。
+- 客户端与服务器**应当**记录自己支持哪些 Schema 方言
+
+### Schema 校验
+
+- Schema **必须**符合其声明的方言或默认方言的要求
+
+### `$ref` 解析
+
+JSON Schema 2020-12 允许 `$ref` 指向绝对 URI。实现**不得**自动解引用会解析为网络 URI 的 `$ref` 值。
+
+实现**可以**提供一种需要主动启用的模式，用于获取非本地 `$ref`，但该模式**必须**默认关闭，并且**应当**强制执行主机允许列表，或者至少拒绝回环地址、链路本地地址和私有网络地址；同时应用超时和大小限制，并记录已解引用的 URI。
+
+如果 Schema 因外部 `$ref` 无法解析而校验失败，**应当**拒绝该 Schema，而不是静默地将其视为没有约束。
+
+### 组合关键字的资源消耗
+
+组合关键字（`anyOf`、`oneOf`、`allOf`、`if`/`then`/`else`）以及 `$defs`，可以表达丰富的 Schema，但校验成本也可能很高。实现**应当**设置合理限制，例如最大 Schema 深度、子 Schema 总数上限或单次校验的时间预算，防止恶意 Schema 成为攻击校验器的拒绝服务途径。
+
+## 通用字段
+
+### `_meta`
+
+MCP 使用 `_meta` 属性／参数，允许客户端与服务器为交互附加额外元数据。
+
+某些键名由 MCP 保留用于协议级元数据，具体如下所述；实现**不得**对这些键下的值作出假设。
+
+**键名格式：** 有效的 `_meta` 键名由两部分组成：可选的**前缀**和**名称**。
+
+**前缀：**
+
+- 如果指定，必须由一系列以点（`.`）分隔的标签组成，并以斜杠（`/`）结尾。
+  - 标签必须以字母开头，以字母或数字结尾；中间字符可以是字母、数字或连字符（`-`）。
+  - 实现应当使用反向 DNS 表示法，例如使用 `com.example/`，而非 `example.com/`。
+- 第二个标签为 `modelcontextprotocol` 或 `mcp` 的任何前缀，都**保留**给 MCP 使用。
+  - 例如：`io.modelcontextprotocol/`、`dev.mcp/`、`org.modelcontextprotocol.api/` 和 `com.mcp.tools/` 均为保留前缀。
+  - 但 `com.example.mcp/` 不属于保留前缀，因为第二个标签是 `example`。
+
+**名称：**
+
+- 除非为空，否则必须以字母或数字字符（`[a-z0-9A-Z]`）开头和结尾。
+- 中间可以包含连字符（`-`）、下划线（`_`）、点（`.`）以及字母和数字。
+
+**保留键：**
+
+本规范保留以下 `_meta` 键：
+
+| 键 | 说明 | 定义位置 |
+| -------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `progressToken` | 为请求启用进度通知 | [进度](/specification/2026-07-28/basic/patterns/progress) |
+| `io.modelcontextprotocol/protocolVersion` | 请求的协议版本 | 下文的逐请求协议字段 |
+| `io.modelcontextprotocol/clientInfo` | 客户端名称与版本 | 下文的逐请求协议字段 |
+| `io.modelcontextprotocol/clientCapabilities` | 与请求相关的客户端能力 | 下文的逐请求协议字段 |
+| `io.modelcontextprotocol/logLevel` | 服务器应为请求输出的最低日志级别 | [日志](/specification/2026-07-28/server/utilities/logging) |
+| `io.modelcontextprotocol/subscriptionId` | 将通知与产生它的订阅关联 | [订阅](/specification/2026-07-28/basic/patterns/subscriptions) |
+| `traceparent`, `tracestate`, `baggage` | OpenTelemetry 跟踪上下文传播 | 下文的 OpenTelemetry 跟踪上下文 |
+
+官方[扩展](/specification/2026-07-28/basic/versioning#extension-negotiation)会在 `io.modelcontextprotocol/` 前缀下定义更多 `_meta` 键；第三方扩展则使用各自供应商的前缀。两种情况下，键的含义都会在扩展文档中说明。
+
+**逐请求协议字段：**
+
+客户端请求在 `_meta` 中携带以下 `io.modelcontextprotocol/*` 字段；标为必填的字段**必须**出现在每个请求中。服务器据此识别所使用的协议版本与能力，而无需依赖先前的任何连接状态。版本协商规则见[版本管理与兼容性][lifecycle]。
+
+| 键 | 类型 | 是否必填 | 说明 |
+| -------------------------------------------- | -------------------- | -------- | --------------------------------------------------------- |
+| `io.modelcontextprotocol/protocolVersion` | `string` | 是 | 本次请求的协议版本，例如 `"2026-07-28"` |
+| `io.modelcontextprotocol/clientInfo` | `Implementation` | 否 | 客户端名称与版本 |
+| `io.modelcontextprotocol/clientCapabilities` | `ClientCapabilities` | 是 | 与本次请求相关的客户端能力 |
+| `io.modelcontextprotocol/logLevel` | `LoggingLevel` | 否 | 服务器应为本次请求输出的最低日志级别 |
+
+请求缺少任意必填字段，就属于格式错误；服务器**必须**以 JSON-RPC 错误码 `-32602`（Invalid params）拒绝该请求。在 HTTP 中，响应状态**必须**为 `400 Bad Request`。
+
+客户端**应当**在每个请求中包含 `io.modelcontextprotocol/clientInfo`，除非明确配置为不提供。
+
+服务器**不得**依赖客户端未声明的能力。如果处理某个请求需要客户端未在 `io.modelcontextprotocol/clientCapabilities` 中提供的能力，服务器**必须**返回 [`MissingRequiredClientCapabilityError`](/specification/2026-07-28/schema#missingrequiredclientcapabilityerror)（`-32021`），并在 `data.requiredCapabilities` 中列出缺失的能力。在 HTTP 中，响应状态**必须**为 `400 Bad Request`。
+
+**逐响应协议字段：**
+
+除非明确配置为不提供，否则服务器**应当**在每个结果的 `_meta` 中包含以下 `io.modelcontextprotocol/*` 字段，用于标明自身身份，而无需依赖先前的任何连接状态：
+
+| 键 | 类型 | 是否必填 | 说明 |
+| ------------------------------------ | ---------------- | -------- | ----------------------- |
+| `io.modelcontextprotocol/serverInfo` | `Implementation` | 否 | 服务器名称与版本 |
+
+<Note>
+  `io.modelcontextprotocol/clientInfo` 和 `io.modelcontextprotocol/serverInfo` 由发送方自行报告，协议不会验证。它们用于展示、日志记录和调试。实现**不应当**用它们改变客户端或服务器的行为，也**不应当**依靠它们作出安全决策。
+</Note>
+
+对于通过 [`subscriptions/listen`][subscriptions-listen] 流交付的通知，服务器**必须**在 `_meta` 中包含 `io.modelcontextprotocol/subscriptionId`，使客户端能够将通知与发起订阅的请求关联起来。
+
+[lifecycle]: /specification/2026-07-28/basic/versioning
+[subscriptions-listen]: /specification/2026-07-28/basic/patterns/subscriptions
+
+**OpenTelemetry 跟踪上下文：**
+
+作为上述前缀要求的例外，`traceparent`、`tracestate` 和 `baggage` 键保留用于 [OpenTelemetry](https://opentelemetry.io/) 跟踪上下文传播。若提供这些值，则必须分别遵循 [W3C Trace Context](https://www.w3.org/TR/trace-context/) 和 [W3C Baggage](https://www.w3.org/TR/baggage/) 格式。
+
+这一例外是为了与现有实现及 [MCP 的 OpenTelemetry 语义约定](https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/)保持兼容。
+
+以下是 `_meta` 中跟踪上下文的非规范性示例：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "get_weather",
+    "arguments": {
+      "location": "New York"
+    },
+    "_meta": {
+      "traceparent": "00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01"
+    }
+  }
+}
+```
+
+### `icons`
+
+`icons` 属性提供一种标准方式，使服务器能够为资源、工具、提示模板和实现公开可视化标识。图标通过提供视觉上下文，增强用户界面，并让可用功能更易于发现。
+
+图标以 `Icon` 对象数组表示，每个图标包含：
+
+- `src`：指向图标资源的 URI，必填。可以是：
+  - 指向图像文件的 HTTP/HTTPS URL
+  - 包含 Base64 编码图像数据的 data URI
+- `mimeType`：可选的 MIME 类型，在服务器提供的类型缺失或过于笼统时使用
+- `sizes`：可选的尺寸规格数组，例如 `["48x48"]`；SVG 等可缩放格式可用 `["any"]`；多个尺寸可用 `["48x48", "96x96"]`
+- `theme`：可选的图标背景主题偏好，值为 `light` 或 `dark`
+
+**必需支持的 MIME 类型：**
+
+支持渲染图标的客户端，**必须**至少支持以下 MIME 类型：
+
+- `image/png`——PNG 图像，安全且兼容性广泛
+- `image/jpeg`（以及 `image/jpg`）——JPEG 图像，安全且兼容性广泛
+
+支持渲染图标的客户端还**应当**支持：
+
+- `image/svg+xml`——SVG 图像，可缩放，但需要采取下述安全措施
+- `image/webp`——WebP 图像，现代且高效的格式
+
+**安全注意事项：**
+
+图标元数据的使用方在处理图标时，**必须**采取适当安全措施，防止系统遭到攻陷：
+
+- 将图标元数据和图标字节视为不可信输入，防范网络、隐私和解析风险。
+- 确保图标 URI 使用 HTTPS 或 `data:`。客户端**必须**拒绝采用不安全方案及重定向的图标 URI，例如 `javascript:`、`file:`、`ftp:`、`ws:` 或本地应用 URI 方案。
+  - 禁止改变 URI 方案，以及重定向到不同源的主机。
+- 防范因图像文件过大、尺寸过大或帧数过多（如 GIF）而引发的资源耗尽攻击。
+  - 使用方**可以**限制图像与内容大小。
+- 获取图标时不要携带凭据。不要发送 Cookie、`Authorization` 请求头或客户端凭据。
+- 验证图标 URI 与服务器同源，以尽量降低向第三方暴露数据或跟踪信息的风险。
+- 获取和渲染图标时应保持谨慎，因为载荷**可能**包含可执行内容，例如带有[内嵌 JavaScript](https://www.w3.org/TR/SVG11/script.html) 或[扩展能力](https://www.w3.org/TR/SVG11/extend.html)的 SVG。
+  - 使用方**可以**禁止特定文件类型，或在渲染前对图标文件进行其他形式的安全清理。
+- 渲染前校验 MIME 类型与文件内容。MIME 类型信息仅供参考。通过文件魔数检测内容类型；类型不匹配或未知时拒绝。
+  - 维护严格的图像类型允许列表。
+
+**用法：**
+
+图标可以附加到：
+
+- `Implementation`：MCP 服务器／客户端实现的可视化标识
+- `Tool`：工具功能的可视化表示
+- `Prompt`：与提示模板一同展示的图标
+- `Resource`：不同资源类型的视觉指示
+
+可以提供多个图标，以适应不同的显示场景和分辨率。客户端应根据自身界面需求，选择最合适的图标。

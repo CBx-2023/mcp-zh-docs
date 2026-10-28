@@ -1,0 +1,67 @@
+---
+title: 扩展支持矩阵
+description: Which MCP clients implement which official extensions
+---
+
+{/* prettier-ignore-start */}
+
+export const CHECK = () => (
+  <span className="flex justify-center">
+    <Icon icon="check" iconType="solid" size={18} className="text-green-500" />
+  </span>
+);
+
+{/* prettier-ignore-end */}
+
+本矩阵展示各 MCP Client 对[官方扩展](/extensions/overview)的支持情况。扩展始终需要主动启用：只有客户端与服务器双方都在[能力](/extensions/overview#negotiation)的 `extensions` 字段中声明支持，客户端才会使用该扩展。
+
+<Note>
+
+本列表由社区维护。如果发现信息不准确，或希望添加、更新信息，请[提交 Pull Request](https://github.com/modelcontextprotocol/modelcontextprotocol/pulls)。
+
+</Note>
+
+## 扩展概览
+
+| 扩展 | 标识符 | 说明 |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
+| [MCP Apps](/extensions/apps/overview) | `io.modelcontextprotocol/ui` | 直接内嵌在对话中渲染的交互式 HTML 界面 |
+| [OAuth 客户端凭据](/extensions/auth/oauth-client-credentials) | `io.modelcontextprotocol/oauth-client-credentials` | 无需用户交互式登录的机器间身份验证与授权 |
+| [企业管理的授权](/extensions/auth/enterprise-managed-authorization) | `io.modelcontextprotocol/enterprise-managed-authorization` | 通过企业 IdP 集中控制访问权限 |
+| [通过 MCP 提供 Skills](/extensions/skills/overview) | `io.modelcontextprotocol/skills` | 发现技能，并读取其指令与配套文件 |
+
+## 支持矩阵
+
+| 客户端 | [MCP Apps](/extensions/apps/overview) | [OAuth 客户端凭据](/extensions/auth/oauth-client-credentials) | [企业授权](/extensions/auth/enterprise-managed-authorization) | [Skills](/extensions/skills/overview) | [Tasks](/extensions/tasks/overview) |
+| ------------------------------------------------------------------------ | :-----------------------------------: | :-------------------------------------------------------------------: | :------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: | :---------------------------------: |
+| [Claude（网页端）](https://claude.ai) | <CHECK /> | | | | |
+| [Claude Desktop](https://claude.ai/download) | <CHECK /> | | | | |
+| [VS Code GitHub Copilot](https://code.visualstudio.com/) | <CHECK /> | | | | |
+| [Microsoft 365 Copilot](https://www.microsoft.com/microsoft-365-copilot) | <CHECK /> | | | | |
+| [Goose](https://block.github.io/goose/) | <CHECK /> | | | | |
+| [Postman](https://postman.com) | <CHECK /> | | | | |
+| [MCPJam](https://www.mcpjam.com/) | <CHECK /> | | | | <CHECK /> |
+| [ChatGPT](https://chatgpt.com/) | <CHECK /> | | | [部分支持](https://developers.openai.com/plugins/build/mcp-server#import-skills-from-the-mcp-server) | |
+| [Cursor](https://cursor.com/) | <CHECK /> | | | | |
+| [Archestra.AI](https://www.archestra.ai/) | <CHECK /> | | <CHECK /> | | |
+| [PostHog Code](https://posthog.com/code/) | <CHECK /> | | | | |
+| [fast-agent](https://github.com/evalstate/fast-agent) | | | | [部分支持](https://github.com/evalstate/fast-agent/blob/main/docs/docs/mcp/skills-over-mcp.md) | |
+| [MCP Inspector](https://github.com/modelcontextprotocol/inspector) | | | | [部分支持](https://github.com/modelcontextprotocol/inspector/blob/main/clients/cli/README.md#skill-verification---verify) | |
+| [mcpc MCP CLI](https://github.com/apify/mcpc) | | <CHECK /> | <CHECK /> | <CHECK /> | |
+
+<Note>
+
+授权扩展，即 OAuth 客户端凭据和企业管理的授权，其支持情况与 MCP 核心授权功能（DCR、CIMD）分开跟踪。最新实现状态请查阅各扩展规范及 [ext-auth 仓库](https://github.com/modelcontextprotocol/ext-auth)。
+
+</Note>
+
+## 为客户端添加扩展支持
+
+如果你正在构建 MCP Client，并希望实现扩展支持：
+
+1. 阅读扩展规范，例如 [ext-auth](https://github.com/modelcontextprotocol/ext-auth) 或 [ext-apps](https://github.com/modelcontextprotocol/ext-apps) 仓库中的规范
+2. 在客户端每个请求 `_meta` 内的 `io.modelcontextprotocol/clientCapabilities` 的 `extensions` 字段中声明支持，并从服务器的 [`server/discover`](/specification/draft/server/discover) 响应中读取其 `extensions`
+3. 实现扩展的协议要求
+4. 提交 Pull Request，更新本矩阵
+
+能力协商机制详见[扩展概览](/extensions/overview#negotiation)。

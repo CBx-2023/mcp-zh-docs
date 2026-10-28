@@ -1,0 +1,398 @@
+{
+  "docs": {
+    "label": "文档",
+    "entry": "",
+    "groups": [
+      {
+        "title": "快速开始",
+        "items": [
+          {
+            "label": "什么是 MCP？",
+            "path": "docs/2026-07-28/getting-started/intro"
+          }
+        ]
+      },
+      {
+        "title": "关于 MCP",
+        "items": [
+          {
+            "label": "架构概览",
+            "path": "docs/2026-07-28/learn/architecture"
+          },
+          {
+            "label": "服务器",
+            "path": "docs/2026-07-28/learn/server-concepts"
+          },
+          {
+            "label": "客户端",
+            "path": "docs/2026-07-28/learn/client-concepts"
+          },
+          {
+            "label": "版本管理",
+            "path": "docs/2026-07-28/learn/versioning"
+          }
+        ]
+      },
+      {
+        "title": "使用 MCP 开发",
+        "items": [
+          {
+            "label": "连接本地 MCP Server",
+            "path": "docs/2026-07-28/develop/connect-local-servers"
+          },
+          {
+            "label": "连接远程 MCP Server",
+            "path": "docs/2026-07-28/develop/connect-remote-servers"
+          },
+          {
+            "label": "借助 Agent Skills 构建",
+            "path": "docs/2026-07-28/develop/build-with-agent-skills"
+          },
+          {
+            "label": "构建 MCP Server",
+            "path": "docs/2026-07-28/develop/build-server"
+          },
+          {
+            "label": "客户端",
+            "children": [
+              {
+                "label": "构建 MCP Client",
+                "path": "docs/2026-07-28/develop/build-client"
+              },
+              {
+                "label": "客户端最佳实践",
+                "path": "docs/2026-07-28/develop/clients/client-best-practices"
+              }
+            ]
+          },
+          {
+            "label": "SDK",
+            "path": "docs/2026-07-28/sdk"
+          },
+          {
+            "label": "安全",
+            "children": [
+              {
+                "label": "理解 MCP 授权",
+                "path": "docs/2026-07-28/tutorials/security/authorization"
+              },
+              {
+                "label": "安全最佳实践",
+                "path": "docs/2026-07-28/tutorials/security/security_best_practices"
+              },
+              {
+                "label": "本地服务器安全",
+                "path": "docs/2026-07-28/tutorials/security/local-server-security"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "开发工具",
+        "items": [
+          {
+            "label": "Inspector",
+            "children": [
+              {
+                "label": "概览",
+                "path": "docs/2026-07-28/tools/inspector"
+              },
+              {
+                "label": "Web 客户端",
+                "path": "docs/2026-07-28/tools/inspector/web"
+              },
+              {
+                "label": "CLI 客户端",
+                "path": "docs/2026-07-28/tools/inspector/cli"
+              },
+              {
+                "label": "TUI 客户端",
+                "path": "docs/2026-07-28/tools/inspector/tui"
+              },
+              {
+                "label": "mcpdo 连接客户端",
+                "path": "docs/2026-07-28/tools/inspector/mcpdo"
+              },
+              {
+                "label": "配置与参数",
+                "path": "docs/2026-07-28/tools/inspector/configuration"
+              },
+              {
+                "label": "授权",
+                "path": "docs/2026-07-28/tools/inspector/authorization"
+              },
+              {
+                "label": "协议时代",
+                "path": "docs/2026-07-28/tools/inspector/protocol-eras"
+              },
+              {
+                "label": "实践指南",
+                "path": "docs/2026-07-28/tools/inspector/recipes"
+              },
+              {
+                "label": "安全",
+                "path": "docs/2026-07-28/tools/inspector/security"
+              }
+            ]
+          },
+          {
+            "label": "调试",
+            "path": "docs/2026-07-28/tools/debugging"
+          }
+        ]
+      },
+      {
+        "title": "示例",
+        "items": [
+          {
+            "label": "服务器示例",
+            "path": "examples"
+          }
+        ]
+      }
+    ]
+  },
+  "specification": {
+    "label": "协议规范",
+    "entry": "specification/2026-07-28/index",
+    "groups": [
+      {
+        "title": "概览",
+        "items": [
+          {
+            "label": "规范概览",
+            "path": "specification/2026-07-28/index"
+          },
+          {
+            "label": "变更记录",
+            "path": "specification/2026-07-28/changelog"
+          },
+          {
+            "label": "已弃用功能",
+            "path": "specification/2026-07-28/deprecated"
+          },
+          {
+            "label": "架构",
+            "path": "specification/2026-07-28/architecture/index"
+          }
+        ]
+      },
+      {
+        "title": "基础协议",
+        "items": [
+          {
+            "label": "基础协议",
+            "path": "specification/2026-07-28/basic/index"
+          },
+          {
+            "label": "版本协商",
+            "path": "specification/2026-07-28/basic/versioning"
+          },
+          {
+            "label": "消息模式",
+            "children": [
+              {
+                "label": "消息模式概览",
+                "path": "specification/2026-07-28/basic/patterns/index"
+              },
+              {
+                "label": "多轮往返请求",
+                "path": "specification/2026-07-28/basic/patterns/mrtr"
+              },
+              {
+                "label": "订阅",
+                "path": "specification/2026-07-28/basic/patterns/subscriptions"
+              },
+              {
+                "label": "取消",
+                "path": "specification/2026-07-28/basic/patterns/cancellation"
+              },
+              {
+                "label": "进度",
+                "path": "specification/2026-07-28/basic/patterns/progress"
+              }
+            ]
+          },
+          {
+            "label": "传输机制",
+            "children": [
+              {
+                "label": "传输机制概览",
+                "path": "specification/2026-07-28/basic/transports/index"
+              },
+              {
+                "label": "stdio",
+                "path": "specification/2026-07-28/basic/transports/stdio"
+              },
+              {
+                "label": "Streamable HTTP",
+                "path": "specification/2026-07-28/basic/transports/streamable-http"
+              }
+            ]
+          },
+          {
+            "label": "授权",
+            "children": [
+              {
+                "label": "授权概览",
+                "path": "specification/2026-07-28/basic/authorization/index"
+              },
+              {
+                "label": "授权服务器发现",
+                "path": "specification/2026-07-28/basic/authorization/authorization-server-discovery"
+              },
+              {
+                "label": "客户端注册",
+                "path": "specification/2026-07-28/basic/authorization/client-registration"
+              },
+              {
+                "label": "安全注意事项",
+                "path": "specification/2026-07-28/basic/authorization/security-considerations"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "客户端功能",
+        "items": [
+          {
+            "label": "根目录（Roots）",
+            "path": "specification/2026-07-28/client/roots"
+          },
+          {
+            "label": "采样",
+            "path": "specification/2026-07-28/client/sampling"
+          },
+          {
+            "label": "信息征询",
+            "path": "specification/2026-07-28/client/elicitation"
+          }
+        ]
+      },
+      {
+        "title": "服务器功能",
+        "items": [
+          {
+            "label": "服务器功能概览",
+            "path": "specification/2026-07-28/server/index"
+          },
+          {
+            "label": "服务器发现",
+            "path": "specification/2026-07-28/server/discover"
+          },
+          {
+            "label": "提示模板",
+            "path": "specification/2026-07-28/server/prompts"
+          },
+          {
+            "label": "资源",
+            "path": "specification/2026-07-28/server/resources"
+          },
+          {
+            "label": "工具",
+            "path": "specification/2026-07-28/server/tools"
+          },
+          {
+            "label": "实用功能",
+            "children": [
+              {
+                "label": "缓存",
+                "path": "specification/2026-07-28/server/utilities/caching"
+              },
+              {
+                "label": "补全",
+                "path": "specification/2026-07-28/server/utilities/completion"
+              },
+              {
+                "label": "日志",
+                "path": "specification/2026-07-28/server/utilities/logging"
+              },
+              {
+                "label": "分页",
+                "path": "specification/2026-07-28/server/utilities/pagination"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "参考",
+        "items": [
+          {
+            "label": "Schema 参考",
+            "path": "specification/2026-07-28/schema"
+          }
+        ]
+      }
+    ]
+  },
+  "extensions": {
+    "label": "扩展",
+    "entry": "extensions/overview",
+    "groups": [
+      {
+        "title": "概览",
+        "items": [
+          {
+            "label": "扩展概览",
+            "path": "extensions/overview"
+          },
+          {
+            "label": "客户端支持矩阵",
+            "path": "extensions/client-matrix"
+          }
+        ]
+      },
+      {
+        "title": "MCP Apps",
+        "items": [
+          {
+            "label": "MCP Apps 概览",
+            "path": "extensions/apps/overview"
+          },
+          {
+            "label": "构建 MCP App",
+            "path": "extensions/apps/build"
+          }
+        ]
+      },
+      {
+        "title": "授权扩展",
+        "items": [
+          {
+            "label": "授权扩展概览",
+            "path": "extensions/auth/overview"
+          },
+          {
+            "label": "OAuth 客户端凭据",
+            "path": "extensions/auth/oauth-client-credentials"
+          },
+          {
+            "label": "企业管理的授权",
+            "path": "extensions/auth/enterprise-managed-authorization"
+          }
+        ]
+      },
+      {
+        "title": "任务",
+        "items": [
+          {
+            "label": "任务（Tasks）",
+            "path": "extensions/tasks/overview"
+          }
+        ]
+      },
+      {
+        "title": "Skills",
+        "items": [
+          {
+            "label": "通过 MCP 提供 Skills",
+            "path": "extensions/skills/overview"
+          }
+        ]
+      }
+    ]
+  }
+}

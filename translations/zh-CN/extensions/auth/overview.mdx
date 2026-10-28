@@ -1,0 +1,64 @@
+---
+title: 授权扩展
+sidebarTitle: Overview
+description: Supplementary authorization mechanisms for the Model Context Protocol
+---
+
+[ext-auth 仓库](https://github.com/modelcontextprotocol/ext-auth)包含官方 MCP 授权扩展，为核心 MCP 规范补充授权能力。这些扩展针对的是标准 OAuth 2.0 授权码流程并不适用的实际场景。
+
+<Card
+  title="modelcontextprotocol/ext-auth"
+  icon="github"
+  href="https://github.com/modelcontextprotocol/ext-auth"
+>
+  MCP 授权扩展的源码、规范与参考实现。
+</Card>
+
+## 为什么需要授权扩展？
+
+MCP 核心规范包含一个基于 OAuth 2.0 的完善[授权框架](/specification/latest/basic/authorization)，能够很好地处理常见场景：用户通过交互方式授予 MCP Client 权限，使其代表用户访问服务器。
+
+但并非所有 MCP 部署都适合这种模式：
+
+- **机器间集成**没有用户参与。后台服务、CI 流水线和自动化工作流需要完成身份验证，而无需经过交互式用户同意流程。
+- **企业环境**通常使用集中的身份提供方（IdP），对所有应用统一执行策略。要求员工逐一授权每个 MCP Server，不仅增加操作负担，也会绕过既有的安全控制。
+
+ext-auth 扩展用于填补这些空白。
+
+## 可用扩展
+
+<CardGroup cols={2}>
+  <Card
+    title="OAuth 客户端凭据"
+    icon="robot"
+    href="/extensions/auth/oauth-client-credentials"
+  >
+    通过 OAuth 2.0 客户端凭据流程进行机器间身份验证，无需用户交互。
+  </Card>
+  <Card
+    title="企业管理的授权"
+    icon="building"
+    href="/extensions/auth/enterprise-managed-authorization"
+  >
+    通过企业身份提供方集中控制访问，员工经由组织的 IdP 访问 MCP Server。
+  </Card>
+</CardGroup>
+
+## 选择合适的扩展
+
+| 场景 | 推荐扩展 |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 后台服务或守护进程访问 MCP Server | [OAuth 客户端凭据](/extensions/auth/oauth-client-credentials) |
+| CI/CD 流水线调用 MCP 工具 | [OAuth 客户端凭据](/extensions/auth/oauth-client-credentials) |
+| 服务器之间的 API 集成 | [OAuth 客户端凭据](/extensions/auth/oauth-client-credentials) |
+| 企业员工在工作中访问 MCP Server | [企业管理的授权](/extensions/auth/enterprise-managed-authorization) |
+| 对整个组织统一执行 MCP 访问策略 | [企业管理的授权](/extensions/auth/enterprise-managed-authorization) |
+| 标准交互式用户授权 | MCP 核心规范，无需扩展 |
+
+## 客户端支持
+
+各客户端对授权扩展的支持有所不同，完整情况请参阅[客户端支持矩阵](/extensions/client-matrix)。两项扩展都需要 MCP Client 显式支持，绝不会默认启用。
+
+## 规范
+
+两项扩展的规范都位于 [ext-auth 仓库](https://github.com/modelcontextprotocol/ext-auth/tree/main/specification/draft)。它们使用标准的 MCP [扩展协商](/extensions/overview#negotiation)机制：客户端在每个请求的 `_meta` 中，通过 `io.modelcontextprotocol/clientCapabilities` 的 `extensions` 字段声明支持情况；服务器则在 [`server/discover`](/specification/draft/server/discover) 返回的能力中声明自身支持情况。

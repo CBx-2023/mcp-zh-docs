@@ -1,0 +1,9 @@
+[
+  "pagination-model",
+  "response-format",
+  "request-format",
+  "pagination-flow",
+  "operations-supporting-pagination",
+  "implementation-guidelines",
+  "error-handling"
+]

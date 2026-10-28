@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node scripts/prepare.mjs && astro dev --host 127.0.0.1",
     "check:translations": "node scripts/validate.mjs",
-    "build": "npm run check:translations && node scripts/prepare.mjs && astro build && pagefind --site dist --glob '{docs/**/*.html,examples/index.html,translation-guide/index.html}' && node scripts/check-site.mjs && node scripts/package.mjs",
+    "build": "npm run check:translations && node scripts/prepare.mjs && astro build && pagefind --site dist --glob '{docs/**/*.html,specification/**/*.html,extensions/**/*.html,examples/index.html,translation-guide/index.html}' && node scripts/check-site.mjs && node scripts/package.mjs",
     "preview": "astro preview --host 127.0.0.1",
     "deploy": "npm run build && wrangler deploy"
   },
@@ -30,10 +30,12 @@
     "github-slugger": "2.0.0",
     "js-yaml": "4.3.2",
     "mdast-util-to-string": "4.0.0",
+    "rehype-stringify": "10.0.1",
     "remark-frontmatter": "5.0.0",
     "remark-gfm": "4.0.1",
     "remark-mdx": "3.1.1",
     "remark-parse": "11.0.0",
+    "remark-rehype": "11.1.2",
     "unified": "11.0.5",
     "unist-util-visit": "5.1.0",
     "wrangler": "4.154.0"

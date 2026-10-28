@@ -1,0 +1,12 @@
+[
+  "user-interaction-model",
+  "capabilities",
+  "log-levels",
+  "requesting-log-messages",
+  "per-request-log-level",
+  "protocol-messages",
+  "log-message-notifications",
+  "error-handling",
+  "implementation-considerations",
+  "security"
+]

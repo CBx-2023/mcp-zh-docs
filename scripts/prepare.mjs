@@ -1,14 +1,15 @@
 import { readFile, writeFile, mkdir, rm, copyFile } from 'node:fs/promises';
 import path from 'node:path';
 import { load, dump } from 'js-yaml';
-import { site, manifest, nodes, sourcePath, translatedPath } from './lib.mjs';
+import { site, manifest, nodes, sourcePath, translatedPath, canonicalPath, localReference } from './lib.mjs';
+import {renderSchema} from './render-schema.mjs';
 
 await rm('src/content/docs',{recursive:true,force:true});
 await mkdir('src/content/docs',{recursive:true});
 await mkdir('src/generated',{recursive:true});
 const headings = {}, redirects = new Set();
 const base='/mcp-zh-docs';
-const translated = new Set(site.pages.map(p=>'/'+p.path));
+const translated = new Set(site.pages.map(p=>'/'+canonicalPath(p.path)));
 for(const page of site.pages) {
   const en = await readFile(sourcePath(page),'utf8');
   const zh = await readFile(translatedPath(page),'utf8');
@@ -20,20 +21,27 @@ for(const page of site.pages) {
   // Framework metadata lives only in generated copies. Translation frontmatter stays intact.
   const generatedMeta = { title:meta.title, description:page.description, sidebar:{label:page.label}, tableOfContents:page.path.endsWith('build-server')?{maxHeadingLevel:2}:true, editUrl:`${site.repository}/edit/main/${translatedPath(page)}` };
   const body = zh.slice(frontmatter.position.end.offset).trimStart();
-  const imports = `import { Card, CardGroup, Frame, Note, Warning, Tip, Steps, Step, Tabs, Tab, Accordion, AccordionGroup, Tooltip, Mermaid, Info, Icon, Badge } from '/src/components/compat';\n\n`;
-  const result=`---\n${dump(generatedMeta,{lineWidth:-1})}---\n\n${imports}${body}`;
+  const imports = `import { Card, CardGroup, Frame, Note, Warning, Tip, Steps, Step, Tabs, Tab, Accordion, AccordionGroup, Tooltip, Mermaid, Info, Icon, Badge, Tree } from '/src/components/compat';\n\n`;
+  let result=`---\n${dump(generatedMeta,{lineWidth:-1})}---\n\n${imports}${body}`;
+  if(page.path==='specification/2026-07-28/schema'){
+    const rendered=await renderSchema(body,anchors,page.path);
+    await writeFile('src/generated/schema-reference.html',rendered.html);
+    generatedMeta.sourceHeadings=rendered.headings;
+    result=`---\n${dump(generatedMeta,{lineWidth:-1})}---\n\nimport SchemaReference from '/src/components/SchemaReference.astro';\n\n<SchemaReference />\n`;
+  }
   const target=`src/content/docs/${page.path}.mdx`;
   await mkdir(path.dirname(target),{recursive:true});
   await writeFile(target,result);
-  await mkdir(path.dirname(`public/${page.path}.md`),{recursive:true});
-  await writeFile(`public/${page.path}.md`,zh);
+  await mkdir(path.dirname(`public/${canonicalPath(page.path)}.md`),{recursive:true});
+  await writeFile(`public/${canonicalPath(page.path)}.md`,zh);
+  if(page.path!==canonicalPath(page.path))for(const slash of ['','/'])redirects.add(`${base}/${page.path}${slash} ${base}/${canonicalPath(page.path)}/ 301`);
   // Both link nodes and MDX href props feed a precise English fallback routing table.
-  const refs = nodes(en,'link').map(n=>n.url);
+  const refs = [...nodes(en,'link'),...nodes(en,'definition')].map(n=>n.url);
   for (const type of ['mdxJsxFlowElement','mdxJsxTextElement']) for(const n of nodes(en,type)) for(const attr of n.attributes??[]) if(attr.name==='href'&&typeof attr.value==='string') refs.push(attr.value);
   for(let ref of refs) {
     if(ref.startsWith('.')) ref=path.posix.resolve('/',path.posix.dirname(page.path),ref);
     if(!ref.startsWith('/')) continue;
-    ref=ref.split('#')[0].replace(/\/$/,'');
+    ref=localReference(ref).split('#')[0].replace(/\/$/,'');
     if(translated.has(ref)) continue;
     redirects.add(`${base}${ref} https://modelcontextprotocol.io${ref} 302`);
     redirects.add(`${base}${ref}/ https://modelcontextprotocol.io${ref} 302`);
@@ -41,14 +49,14 @@ for(const page of site.pages) {
 }
 await writeFile('src/generated/headings.json',JSON.stringify(headings,null,2)+'\n');
 await copyFile('content/translation-guide.mdx','src/content/docs/translation-guide.mdx');
-// Keep the full official sidebar usable while only three pages are translated.
-const nav=JSON.parse(await readFile('upstream/docs/docs.json','utf8')).navigation.tabs[0].versions[0];
+// Keep remaining out-of-scope references usable without changing translation source links.
+const navigation=JSON.parse(await readFile('upstream/docs/docs.json','utf8')).navigation.tabs;
 function addFallback(value){
- if(typeof value==='string'&&!translated.has('/'+value))for(const slash of ['', '/'])redirects.add(`${base}/${value}${slash} https://modelcontextprotocol.io/${value} 302`);
+ if(typeof value==='string'&&!translated.has('/'+canonicalPath(value)))for(const slash of ['', '/'])redirects.add(`${base}/${value}${slash} https://modelcontextprotocol.io/${value} 302`);
  else if(Array.isArray(value))for(const child of value)addFallback(child);
  else if(value&&typeof value==='object')addFallback(value.pages);
 }
-addFallback(nav.pages);
+for(const tab of navigation.slice(0,3))addFallback(tab.versions?tab.versions[0].pages:tab.pages);
 await writeFile('public/_redirects',[
   `/ ${base}/ 302`,
   `${base} ${base}/ 301`,

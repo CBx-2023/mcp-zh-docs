@@ -15,3 +15,7 @@ export { default as Mermaid } from './mint/Mermaid.astro';
 export { default as Info } from './mint/Info.astro';
 export { default as Badge } from './mint/Badge.astro';
 export { default as Icon } from './mint/Icon.astro';
+import TreeRoot from './mint/Tree.astro';
+import TreeFolder from './mint/TreeFolder.astro';
+import TreeFile from './mint/TreeFile.astro';
+export const Tree=Object.assign(TreeRoot,{Folder:TreeFolder,File:TreeFile});

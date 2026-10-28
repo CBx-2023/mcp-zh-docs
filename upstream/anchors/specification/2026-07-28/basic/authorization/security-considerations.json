@@ -1,0 +1,14 @@
+[
+  "token-audience-binding-and-validation",
+  "token-theft",
+  "communication-security",
+  "authorization-code-protection",
+  "mix-up-attacks",
+  "open-redirection",
+  "client-id-metadata-document-security",
+  "authorization-server-abuse-protection",
+  "localhost-redirect-uri-risks",
+  "trust-policies",
+  "confused-deputy-problem",
+  "access-token-privilege-restriction"
+]

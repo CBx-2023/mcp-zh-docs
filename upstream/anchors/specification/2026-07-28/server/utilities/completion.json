@@ -1,0 +1,15 @@
+[
+  "user-interaction-model",
+  "capabilities",
+  "protocol-messages",
+  "requesting-completions",
+  "reference-types",
+  "completion-results",
+  "message-flow",
+  "data-types",
+  "completerequest",
+  "completeresult",
+  "error-handling",
+  "implementation-considerations",
+  "security"
+]

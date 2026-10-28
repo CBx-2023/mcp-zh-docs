@@ -10,6 +10,6 @@ export default defineConfig({
   markdown: { processor: unified({ smartypants:false, remarkPlugins:[remarkCompatibility] }) },
   integrations: [
     expressiveCode({ themes:['github-light','github-dark'], defaultLocale:'zh-CN', shiki:{langAlias:{env:'dotenv'}}, styleOverrides:{borderRadius:'0.75rem',codeFontSize:'0.8125rem'} }),
-    mdx(),
+    mdx({optimize:true}),
   ],
 });

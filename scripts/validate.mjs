@@ -26,7 +26,7 @@ for (const page of pages) {
     }
     if (node.type === 'link' || node.type === 'image') delete item.title;
     if (node.attributes) item.attributes = node.attributes.map(a => {
-      if (a.type === 'mdxJsxAttribute' && ['title','tip','alt','aria-label','caption'].includes(a.name) && typeof a.value === 'string') return { name: a.name, value: '<translated>' };
+      if (a.type === 'mdxJsxAttribute' && ['title','tip','alt','aria-label','caption','comment'].includes(a.name) && typeof a.value === 'string') return { name: a.name, value: '<translated>' };
       return { name: a.name, value: typeof a.value === 'object' ? a.value?.value : a.value };
     });
     if (['inlineCode', 'code', 'mdxFlowExpression', 'mdxTextExpression', 'mdxjsEsm'].includes(node.type)) item.value = node.value;
@@ -50,6 +50,19 @@ for (const page of pages) {
     if(type === 'inlineCode') { protectedEn.sort(); protectedZh.sort(); }
     assert.deepEqual(protectedZh, protectedEn, `${type} bytes changed: ${page.path}`);
   }
+  const protectedHtml = text => {
+    const blocks=[];
+    for(const type of ['mdxJsxFlowElement','mdxJsxTextElement'])for(const n of nodes(text,type)){
+      const cls=n.attributes?.find(a=>['class','className'].includes(a.name))?.value;
+      const hasId=n.attributes?.some(a=>a.name==='id');
+      const level=n.attributes?.find(a=>a.name==='data-typedoc-h')?.value;
+      const signature=typeof cls==='string'&&/\btsd-signature\b/.test(cls);
+      const declaration=typeof cls==='string'&&/\btsd-anchor-link\b/.test(cls)&&(hasId||level==='3');
+      if(['code','pre'].includes(n.name)||signature||declaration)blocks.push(raw(text,n));
+    }
+    return blocks.sort();
+  };
+  assert.deepEqual(protectedHtml(zh),protectedHtml(en),`HTML code or TypeDoc signature changed: ${page.path}`);
   const cleanYaml = text => raw(text,nodes(text,'yaml')[0]).replace(/^title:.*$/m, 'title: <translated>');
   assert.equal(cleanYaml(zh), cleanYaml(en), `Frontmatter changed beyond title: ${page.path}`);
   const markers = text => text.match(/\{#[^}]+\}/g) ?? [];

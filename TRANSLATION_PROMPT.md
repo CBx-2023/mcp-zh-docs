@@ -13,8 +13,9 @@
 执行补充：
 
 - 所有语言的代码块均受保护，包含注释、字符串、缩进、围栏信息和 Mermaid。
+- HTML `code`／`pre` 元素、TypeDoc 类型签名与属性声明也受保护，逐字保留。
 - 保留行内代码、组件标签、功能属性、导入语句和表达式。
-- `title`、`tip`、`alt`、`aria-label`、`caption` 等纯自然语言显示属性可翻译。
+- `title`、`tip`、`alt`、`aria-label`、`caption`，以及文件树 `comment` 等纯自然语言显示属性可翻译。
 - Frontmatter 中除 `title` 外的值也受保护，包含 `sidebarTitle` 和 `description`。
 - 以 `content/glossary.json` 保持术语一致。规范用词必须保留原文要求强度。
 - 保留原文内容与要求，不加入未标注的解释、修复或删节。

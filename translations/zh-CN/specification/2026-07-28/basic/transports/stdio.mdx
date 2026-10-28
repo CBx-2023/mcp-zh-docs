@@ -1,0 +1,90 @@
+---
+title: stdio
+---
+
+<div id="enable-section-numbers" />
+
+在 **stdio** 传输中，客户端将 MCP Server 作为子进程启动。双方通过子进程的标准流通信：
+
+- 服务器从 `stdin` 读取 JSON-RPC 消息，并将 JSON-RPC 消息写入 `stdout`。
+- 每条消息都是单个 JSON-RPC 请求、通知或响应。
+- 消息以换行符分隔，且**不得**包含内嵌换行符。
+- 服务器**可以**向 `stderr` 写入 UTF-8 字符串，用于任何日志记录，包括信息、调试和错误消息。
+- 客户端**可以**捕获、转发或忽略服务器的 `stderr` 输出，并且**不应当**假定出现 `stderr` 输出就表示发生了错误。
+- 服务器**不得**向自己的 `stdout` 写入任何不是有效 MCP 消息的内容。
+- 客户端**不得**向服务器的 `stdin` 写入任何不是有效 MCP 消息的内容。
+
+标准流是这一绑定的标准通信通道，但除进程生命周期之外，绑定的其他部分都不依赖它。线上的消息格式，即通过可靠双向字节流传递、每行一条以换行符分隔的 JSON-RPC 消息，可以原封不动地用于 Unix 域套接字、TCP 连接或任何类似通道。基于这类流构建的[自定义传输方式](/specification/2026-07-28/basic/transports#custom-transports)**应当**复用这一分帧方式及本页的消息规则；只有子进程特有的部分（启动、`stderr`、通过关闭流来关停、进程重启），才需要提供适用于具体通道的对应机制。
+
+## 发送消息
+
+客户端通过向服务器的 `stdin` 写入 JSON-RPC _请求_ 和 _通知_ 来发送消息，每行一条。客户端**不得**写入 JSON-RPC _响应_。
+
+## 接收消息
+
+客户端从 `stdout` 读取服务器消息，每行一条。所有消息共用这一个通道，不存在逐请求流。
+
+服务器写入三类消息：
+
+1. 对客户端请求的 _响应_，通过 JSON-RPC `id` 关联。
+2. 与正在执行的请求有关的 _通知_，例如 `notifications/progress` 和 `notifications/message`。
+3. 为活动的 [`subscriptions/listen`][subscriptions-listen] 请求交付的 _通知_。客户端**必须**使用 `_meta` 中的 `io.modelcontextprotocol/subscriptionId` 字段关联这些通知；详见 [`SubscriptionsListenRequest`][subscriptions-listen-request]。
+
+服务器**不得**向 `stdout` 写入 JSON-RPC _请求_。服务器与客户端之间需要客户端参与的交互，通过 [`InputRequiredResult`][mrtr-input-required] 响应承载；详见[多轮往返请求][mrtr]。
+
+[mrtr]: /specification/2026-07-28/basic/patterns/mrtr
+[mrtr-input-required]: /specification/2026-07-28/basic/patterns/mrtr#inputrequiredresult
+[subscriptions-listen]: /specification/2026-07-28/basic/patterns/subscriptions
+[subscriptions-listen-request]: /specification/2026-07-28/schema#subscriptionslistenrequest
+
+## 请求元数据
+
+stdio 传输的全部请求元数据，都直接包含在 JSON-RPC 消息体中。协议版本、逐请求能力和可选的客户端身份位于 [`_meta.io.modelcontextprotocol/*`][meta-fields]；方法名称和参数则位于 JSON-RPC 规定的位置。这里没有请求头层。
+
+[meta-fields]: /specification/2026-07-28/basic/index#meta
+
+## 取消
+
+要取消正在执行的请求，客户端**必须**发送引用该请求 ID 的 `notifications/cancelled` 通知。由于 stdio 只有一个共享的双向通道，因此没有可单独关闭的逐请求流。服务器**应当**在实际可行时尽快停止已取消请求的工作，并且**不得**再为该请求发送任何消息。完整规则见[取消][cancellation]。
+
+[cancellation]: /specification/2026-07-28/basic/patterns/cancellation
+
+## 关停
+
+客户端**应当**按以下步骤发起关停：
+
+1. 关闭通往子进程（服务器）的输入流。
+2. 等待服务器退出。
+3. 如果服务器未在合理时间内退出，则使用适用于当前操作系统的机制强制终止进程。
+
+在 POSIX 系统上，强制终止通常先使用 [`SIGTERM`][sigterm]，再升级为 `SIGKILL`。Windows 不提供 POSIX 信号，客户端可以使用 [`TerminateProcess`][terminateprocess] 或 [Job Objects][job-objects]。
+
+服务器的标准输入关闭或读取返回文件结束时，**应当**及时退出。这是主要的优雅关停信号，也是唯一可移植的方式；遵循这一信号能够减少强制终止的需要。
+
+服务器**可以**通过关闭通往客户端的输出流并退出，主动发起关停。
+
+## 意外终止
+
+服务器进程意外退出时，客户端**应当**重启它。由于协议无状态，正在执行的请求会直接丢失，客户端可以针对新进程重试这些请求。活动的 [`subscriptions/listen`][subscriptions-listen] 流也必须在重启后重新建立。
+
+[sigterm]: https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/signal.h.html
+[terminateprocess]: https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-terminateprocess
+[job-objects]: https://learn.microsoft.com/windows/win32/procthread/job-objects
+
+## 向后兼容
+
+同时支持现代（逐请求元数据）MCP 版本和需要 `initialize` 握手的旧版协议的客户端，**应当**在发送任何其他请求之前，通过 [`server/discover`][server-discover] 进行探测，并在 `_meta` 中设置自己首选的现代版本。探测有三种可能结果：
+
+- 服务器返回 `DiscoverResult`：说明服务器使用现代协议。从 `supportedVersions` 中选择双方都支持的版本，然后继续。
+- 服务器返回已知的现代 JSON-RPC 错误，例如 [`UnsupportedProtocolVersionError`][unsupported-version]：说明服务器使用现代协议，但不支持请求中的版本。应使用它公开的 `supported` 列表中的某个版本。**不要**回退到 `initialize`。
+- 服务器返回其他任何错误，或在合理超时时间内未响应：说明服务器使用旧版协议。回退到 `initialize` 握手。
+
+回退判断**不得**绑定到某一个特定错误码：旧版服务器收到未知的、发生于 `initialize` 之前的请求时，可能返回由实现自行定义的错误（常见为 `-32601` 或 `-32602`），也可能完全不响应。
+
+仅支持现代版本的客户端不必进行探测，但仍然**建议**探测：某些旧版服务器不会验证请求是否发生在 `initialize` 之后，因而可能按旧版语义处理一个无法单凭方法名判断时代的方法，例如 `tools/call`。探测则能让这种情况以确定的方式失败。
+
+有关协议时代模型以及供实现者参考的兼容性矩阵，详见[版本管理：向后兼容][lifecycle-compat]。
+
+[server-discover]: /specification/2026-07-28/schema#discoverrequest
+[unsupported-version]: /specification/2026-07-28/schema#unsupportedprotocolversionerror
+[lifecycle-compat]: /specification/2026-07-28/basic/versioning#backward-compatibility-with-initialization-based-versions

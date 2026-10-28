@@ -1,0 +1,19 @@
+[
+  "mcp-extensions",
+  "official-extension-repositories",
+  "mcp-authorization-extensions",
+  "mcp-apps",
+  "mcp-tasks",
+  "skills-over-mcp",
+  "experimental-extensions",
+  "ground-rules",
+  "graduation-to-official-status",
+  "creating-extensions",
+  "requirements",
+  "sdk-implementation",
+  "evolution",
+  "negotiation",
+  "client-capabilities",
+  "server-capabilities",
+  "graceful-degradation"
+]

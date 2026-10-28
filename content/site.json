@@ -7,163 +7,470 @@
       "path": "docs/2026-07-28/getting-started/intro",
       "label": "什么是 MCP？",
       "description": "什么是 MCP？",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/learn/architecture",
       "label": "架构概览",
       "description": "架构概览",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/learn/server-concepts",
       "label": "服务器",
       "description": "服务器",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/learn/client-concepts",
       "label": "客户端",
       "description": "客户端",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/learn/versioning",
       "label": "版本管理",
       "description": "版本管理",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/develop/connect-local-servers",
       "label": "连接本地 MCP Server",
       "description": "连接本地 MCP Server",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/develop/connect-remote-servers",
       "label": "连接远程 MCP Server",
       "description": "连接远程 MCP Server",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/develop/build-with-agent-skills",
       "label": "借助 Agent Skills 构建",
       "description": "借助 Agent Skills 构建",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/develop/build-server",
       "label": "构建 MCP Server",
       "description": "构建 MCP Server",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/develop/build-client",
       "label": "构建 MCP Client",
       "description": "构建 MCP Client",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/develop/clients/client-best-practices",
       "label": "客户端最佳实践",
       "description": "客户端最佳实践",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/sdk",
       "label": "SDK",
       "description": "SDK",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tutorials/security/authorization",
       "label": "理解 MCP 授权",
       "description": "理解 MCP 授权",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tutorials/security/security_best_practices",
       "label": "安全最佳实践",
       "description": "安全最佳实践",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tutorials/security/local-server-security",
       "label": "本地服务器安全",
       "description": "本地服务器安全",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tools/inspector",
       "label": "概览",
       "description": "概览",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tools/inspector/web",
       "label": "Web 客户端",
       "description": "Web 客户端",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tools/inspector/cli",
       "label": "CLI 客户端",
       "description": "CLI 客户端",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tools/inspector/tui",
       "label": "TUI 客户端",
       "description": "TUI 客户端",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tools/inspector/mcpdo",
       "label": "mcpdo 连接客户端",
       "description": "mcpdo 连接客户端",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tools/inspector/configuration",
       "label": "配置与参数",
       "description": "配置与参数",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tools/inspector/authorization",
       "label": "授权",
       "description": "授权",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tools/inspector/protocol-eras",
       "label": "协议时代",
       "description": "协议时代",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tools/inspector/recipes",
       "label": "实践指南",
       "description": "实践指南",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tools/inspector/security",
       "label": "安全",
       "description": "安全",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "docs/2026-07-28/tools/debugging",
       "label": "调试",
       "description": "调试",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
     },
     {
       "path": "examples",
       "label": "服务器示例",
       "description": "服务器示例",
-      "status": "translated"
+      "status": "translated",
+      "section": "docs"
+    },
+    {
+      "path": "specification/2026-07-28/index",
+      "label": "规范概览",
+      "description": "规范概览",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/changelog",
+      "label": "变更记录",
+      "description": "变更记录",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/deprecated",
+      "label": "已弃用功能",
+      "description": "已弃用功能",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/architecture/index",
+      "label": "架构",
+      "description": "架构",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/index",
+      "label": "基础协议",
+      "description": "基础协议",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/versioning",
+      "label": "版本协商",
+      "description": "版本协商",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/patterns/index",
+      "label": "消息模式概览",
+      "description": "消息模式概览",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/patterns/mrtr",
+      "label": "多轮往返请求",
+      "description": "多轮往返请求",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/patterns/subscriptions",
+      "label": "订阅",
+      "description": "订阅",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/patterns/cancellation",
+      "label": "取消",
+      "description": "取消",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/patterns/progress",
+      "label": "进度",
+      "description": "进度",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/transports/index",
+      "label": "传输机制概览",
+      "description": "传输机制概览",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/transports/stdio",
+      "label": "stdio",
+      "description": "stdio",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/transports/streamable-http",
+      "label": "Streamable HTTP",
+      "description": "Streamable HTTP",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/authorization/index",
+      "label": "授权概览",
+      "description": "授权概览",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/authorization/authorization-server-discovery",
+      "label": "授权服务器发现",
+      "description": "授权服务器发现",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/authorization/client-registration",
+      "label": "客户端注册",
+      "description": "客户端注册",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/basic/authorization/security-considerations",
+      "label": "安全注意事项",
+      "description": "安全注意事项",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/client/roots",
+      "label": "根目录（Roots）",
+      "description": "根目录（Roots）",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/client/sampling",
+      "label": "采样",
+      "description": "采样",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/client/elicitation",
+      "label": "信息征询",
+      "description": "信息征询",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/server/index",
+      "label": "服务器功能概览",
+      "description": "服务器功能概览",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/server/discover",
+      "label": "服务器发现",
+      "description": "服务器发现",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/server/prompts",
+      "label": "提示模板",
+      "description": "提示模板",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/server/resources",
+      "label": "资源",
+      "description": "资源",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/server/tools",
+      "label": "工具",
+      "description": "工具",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/server/utilities/caching",
+      "label": "缓存",
+      "description": "缓存",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/server/utilities/completion",
+      "label": "补全",
+      "description": "补全",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/server/utilities/logging",
+      "label": "日志",
+      "description": "日志",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/server/utilities/pagination",
+      "label": "分页",
+      "description": "分页",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "specification/2026-07-28/schema",
+      "label": "Schema 参考",
+      "description": "Schema 参考",
+      "status": "translated",
+      "section": "specification"
+    },
+    {
+      "path": "extensions/overview",
+      "label": "扩展概览",
+      "description": "扩展概览",
+      "status": "translated",
+      "section": "extensions"
+    },
+    {
+      "path": "extensions/client-matrix",
+      "label": "客户端支持矩阵",
+      "description": "客户端支持矩阵",
+      "status": "translated",
+      "section": "extensions"
+    },
+    {
+      "path": "extensions/apps/overview",
+      "label": "MCP Apps 概览",
+      "description": "MCP Apps 概览",
+      "status": "translated",
+      "section": "extensions"
+    },
+    {
+      "path": "extensions/apps/build",
+      "label": "构建 MCP App",
+      "description": "构建 MCP App",
+      "status": "translated",
+      "section": "extensions"
+    },
+    {
+      "path": "extensions/auth/overview",
+      "label": "授权扩展概览",
+      "description": "授权扩展概览",
+      "status": "translated",
+      "section": "extensions"
+    },
+    {
+      "path": "extensions/auth/oauth-client-credentials",
+      "label": "OAuth 客户端凭据",
+      "description": "OAuth 客户端凭据",
+      "status": "translated",
+      "section": "extensions"
+    },
+    {
+      "path": "extensions/auth/enterprise-managed-authorization",
+      "label": "企业管理的授权",
+      "description": "企业管理的授权",
+      "status": "translated",
+      "section": "extensions"
+    },
+    {
+      "path": "extensions/tasks/overview",
+      "label": "任务（Tasks）",
+      "description": "任务（Tasks）",
+      "status": "translated",
+      "section": "extensions"
+    },
+    {
+      "path": "extensions/skills/overview",
+      "label": "通过 MCP 提供 Skills",
+      "description": "通过 MCP 提供 Skills",
+      "status": "translated",
+      "section": "extensions"
     }
   ]
 }

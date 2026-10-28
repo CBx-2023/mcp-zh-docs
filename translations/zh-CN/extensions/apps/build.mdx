@@ -1,0 +1,522 @@
+---
+title: 构建 MCP App
+description: Getting started guide for building interactive UI applications with MCP Apps
+---
+
+## 前置条件
+
+你需要安装 [Node.js](https://nodejs.org/en/download) 18 或更高版本。建议先熟悉 [MCP 工具](/specification/latest/server/tools)和[资源](/specification/latest/server/resources)，因为 MCP Apps 会结合这两种原语。了解 [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)，也有助于理解服务器端的实现模式。
+
+## 开始使用
+
+创建 MCP App 最快的方式，是让 AI 编程智能体使用 MCP Apps Skill。如果更希望手动配置项目，可以直接阅读[手动配置](#manual-setup)。
+
+### 使用 AI 编程智能体
+
+支持 Skills 的 AI 编程智能体，可以为你生成完整的 MCP App 项目骨架。Skill 是由指令和资源组成的文件夹，智能体会在相关时加载它们，从中学习创建 MCP Apps 等专门任务的执行方法。
+
+`create-mcp-app` Skill 包含架构指南、最佳实践和可运行的示例，智能体会据此生成项目。
+
+<Steps>
+<Step title="安装 Skill">
+
+如果使用 Claude Code，可以直接运行以下命令安装：
+
+```
+/plugin marketplace add modelcontextprotocol/ext-apps
+/plugin install mcp-apps@modelcontextprotocol-ext-apps
+```
+
+也可以使用 [Vercel Skills CLI](https://skills.sh/)，为不同 AI 编程智能体安装 Skills：
+
+```bash
+npx skills add modelcontextprotocol/ext-apps
+```
+
+或者，克隆 ext-apps 仓库，手动安装 Skill：
+
+```bash
+git clone https://github.com/modelcontextprotocol/ext-apps.git
+```
+
+然后将 Skill 复制到对应智能体的目录：
+
+| 智能体 | Skills 目录（macOS/Linux） | Skills 目录（Windows） |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------- |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code/skills) | `~/.claude/skills/` | `%USERPROFILE%\.claude\skills\` |
+| [VS Code](https://code.visualstudio.com/docs/copilot/customization/agent-skills) 和 [GitHub Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) | `~/.copilot/skills/` | `%USERPROFILE%\.copilot\skills\` |
+| [Gemini CLI](https://geminicli.com/docs/cli/skills/) | `~/.gemini/skills/` | `%USERPROFILE%\.gemini\skills\` |
+| [Cline](https://cline.bot/blog/cline-3-48-0-skills-and-websearch-make-cline-smarter) | `~/.cline/skills/` | `%USERPROFILE%\.cline\skills\` |
+| [Goose](https://goose-docs.ai/docs/guides/context-engineering/using-skills/) | `~/.config/goose/skills/` | `%USERPROFILE%\.config\goose\skills\` |
+| [Codex](https://developers.openai.com/codex/skills/) | `~/.codex/skills/` | `%USERPROFILE%\.codex\skills\` |
+| [Cursor](https://cursor.com/docs/context/skills) | `~/.cursor/skills/` | `%USERPROFILE%\.cursor\skills\` |
+
+<Note>
+
+这不是完整列表。其他智能体可能也支持 Skills，但使用不同目录；请查阅所用智能体的文档。
+
+</Note>
+
+例如，Claude Code 可以全局安装 Skill，使其在所有项目中可用：
+
+<CodeGroup>
+
+```bash macOS/Linux
+cp -r ext-apps/plugins/mcp-apps/skills/create-mcp-app ~/.claude/skills/create-mcp-app
+```
+
+```powershell Windows
+Copy-Item -Recurse ext-apps\plugins\mcp-apps\skills\create-mcp-app $env:USERPROFILE\.claude\skills\create-mcp-app
+```
+
+</CodeGroup>
+
+也可以仅为单个项目安装，将 Skill 复制到项目中的 `.claude/skills/` 目录：
+
+<CodeGroup>
+
+```bash macOS/Linux
+mkdir -p .claude/skills && cp -r ext-apps/plugins/mcp-apps/skills/create-mcp-app .claude/skills/create-mcp-app
+```
+
+```powershell Windows
+New-Item -ItemType Directory -Force -Path .claude\skills | Out-Null; Copy-Item -Recurse ext-apps\plugins\mcp-apps\skills\create-mcp-app .claude\skills\create-mcp-app
+```
+
+</CodeGroup>
+
+要确认安装成功，可以问智能体“你能访问哪些 Skills？”；可用 Skills 中应当包含 `create-mcp-app`。
+
+</Step>
+<Step title="创建应用">
+
+请 AI 编程智能体构建应用：
+
+```
+Create an MCP App that displays a color picker
+```
+
+智能体会识别到 `create-mcp-app` Skill 与任务相关，加载其指令，然后生成包含服务器、界面和配置文件的完整项目骨架。
+
+<Frame caption="使用 Claude Code 创建新的 MCP App">
+  <img
+    src="../../images/quickstart-apps/create-mcp-app-skill.gif"
+    alt="使用 Claude Code 创建新的 MCP App"
+  />
+</Frame>
+
+</Step>
+<Step title="运行应用">
+
+<CodeGroup>
+
+```bash macOS/Linux
+npm install && npm run build && npm run serve
+```
+
+```powershell Windows
+npm install; npm run build; npm run serve
+```
+
+</CodeGroup>
+
+<Tip>
+
+运行上述命令前，可能需要先确认自己位于**应用文件夹**中。
+
+</Tip>
+
+</Step>
+<Step title="测试应用">
+
+按照下文[测试应用](#testing-your-app)中的步骤操作。对于颜色选择器示例，新建一个聊天，请 Claude 提供颜色选择器即可。
+
+<Frame caption="在 Claude 中测试颜色选择器">
+  <img
+    src="../../images/quickstart-apps/test-color-picker.gif"
+    alt="在 Claude 中测试颜色选择器"
+  />
+</Frame>
+
+</Step>
+</Steps>
+
+### 手动配置
+
+如果没有使用 AI 编程智能体，或希望了解配置过程，请按照以下步骤操作。
+
+<Steps>
+<Step title="创建项目结构">
+
+典型 MCP App 项目会将服务器代码与界面代码分开：
+
+<Tree>
+  <Tree.Folder name="my-mcp-app" defaultOpen>
+    <Tree.File name="package.json" />
+    <Tree.File name="tsconfig.json" />
+    <Tree.File name="vite.config.ts" />
+    <Tree.File name="server.ts" comment="提供工具与资源的 MCP Server" />
+    <Tree.File name="mcp-app.html" comment="界面入口" />
+    <Tree.Folder name="src" defaultOpen>
+      <Tree.File name="mcp-app.ts" comment="界面逻辑" />
+    </Tree.Folder>
+  </Tree.Folder>
+</Tree>
+
+服务器注册工具并提供界面资源。界面资源最终会在安全的 iframe 中渲染，并采用默认拒绝的 CSP 配置。如果应用含有 CSS 和 JS 资源，就需要[配置 CSP](https://apps.extensions.modelcontextprotocol.io/api/documents/Patterns.html#configuring-csp-and-cors)；也可以用 `vite-plugin-singlefile` 之类的工具，将资源打包进 HTML，本教程采用后一种方式。
+
+</Step>
+<Step title="安装依赖">
+
+```bash
+npm install @modelcontextprotocol/ext-apps @modelcontextprotocol/sdk
+npm install -D typescript vite vite-plugin-singlefile express cors @types/express @types/cors tsx
+```
+
+`ext-apps` 包为服务器端（注册工具和资源）与客户端（用于界面和宿主通信的 `App` 类）提供辅助功能。这里使用 Vite 和 `vite-plugin-singlefile` 插件，将界面及资源打包为单个 HTML 文件以便使用，但这不是强制要求；只要[配置 CSP](https://apps.extensions.modelcontextprotocol.io/api/documents/Patterns.html#configuring-csp-and-cors)，就可以使用任意打包工具，或直接提供未打包的文件。
+
+</Step>
+<Step title="配置项目">
+
+<Tabs>
+<Tab title="package.json">
+
+`"type": "module"` 设置启用 ES module 语法。`build` 脚本通过 `INPUT` 环境变量告诉 Vite 要打包哪个 HTML 文件。`serve` 脚本使用 `tsx` 执行 TypeScript，运行服务器。
+
+```json
+{
+  "type": "module",
+  "scripts": {
+    "build": "INPUT=mcp-app.html vite build",
+    "serve": "npx tsx server.ts"
+  }
+}
+```
+
+</Tab>
+<Tab title="tsconfig.json">
+
+TypeScript 配置以现代 JavaScript（`ES2022`）为目标，使用 ESNext 模块和打包器模块解析方式，适合与 Vite 配合。`include` 数组同时覆盖根目录中的服务器代码和 `src/` 中的界面代码。
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist"
+  },
+  "include": ["*.ts", "src/**/*.ts"]
+}
+```
+
+</Tab>
+<Tab title="vite.config.ts">
+
+```typescript
+import { defineConfig } from "vite";
+import { viteSingleFile } from "vite-plugin-singlefile";
+
+export default defineConfig({
+  plugins: [viteSingleFile()],
+  build: {
+    outDir: "dist",
+    rollupOptions: {
+      input: process.env.INPUT,
+    },
+  },
+});
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step title="构建项目">
+
+完成项目结构和配置后，继续阅读下文[构建 MCP App](#building-an-mcp-app)，实现服务器与界面。
+
+</Step>
+</Steps>
+
+## 构建 MCP App
+
+接下来构建一个显示服务器当前时间的简单应用，展示完整流程：注册带有界面元数据的工具，将打包后的 HTML 作为资源提供，并实现能够与服务器通信的界面。
+
+### 服务器实现
+
+服务器需要完成两件事：注册包含 `_meta.ui.resourceUri` 字段的工具，以及注册用于提供打包 HTML 的资源处理器。完整服务器文件如下：
+
+```typescript
+// server.ts
+console.log("Starting MCP App server...");
+
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import {
+  registerAppTool,
+  registerAppResource,
+  RESOURCE_MIME_TYPE,
+} from "@modelcontextprotocol/ext-apps/server";
+import cors from "cors";
+import express from "express";
+import fs from "node:fs/promises";
+import path from "node:path";
+
+const server = new McpServer({
+  name: "My MCP App Server",
+  version: "1.0.0",
+});
+
+// The ui:// scheme tells hosts this is an MCP App resource.
+// The path structure is arbitrary; organize it however makes sense for your app.
+const resourceUri = "ui://get-time/mcp-app.html";
+
+// Register the tool that returns the current time
+registerAppTool(
+  server,
+  "get-time",
+  {
+    title: "Get Time",
+    description: "Returns the current server time.",
+    inputSchema: {},
+    _meta: { ui: { resourceUri } },
+  },
+  async () => {
+    const time = new Date().toISOString();
+    return {
+      content: [{ type: "text", text: time }],
+    };
+  },
+);
+
+// Register the resource that serves the bundled HTML
+registerAppResource(
+  server,
+  resourceUri,
+  resourceUri,
+  { mimeType: RESOURCE_MIME_TYPE },
+  async () => {
+    const html = await fs.readFile(
+      path.join(import.meta.dirname, "dist", "mcp-app.html"),
+      "utf-8",
+    );
+    return {
+      contents: [
+        { uri: resourceUri, mimeType: RESOURCE_MIME_TYPE, text: html },
+      ],
+    };
+  },
+);
+
+// Expose the MCP server over HTTP
+const expressApp = express();
+expressApp.use(cors());
+expressApp.use(express.json());
+
+expressApp.post("/mcp", async (req, res) => {
+  const transport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: undefined,
+    enableJsonResponse: true,
+  });
+  res.on("close", () => transport.close());
+  await server.connect(transport);
+  await transport.handleRequest(req, res, req.body);
+});
+
+expressApp.listen(3001, (err) => {
+  if (err) {
+    console.error("Error starting server:", err);
+    process.exit(1);
+  }
+  console.log("Server listening on http://localhost:3001/mcp");
+});
+```
+
+关键部分如下：
+
+- **`resourceUri`**：`ui://` scheme 告诉宿主，这是一个 MCP App 资源；路径结构可以任意定义。
+- **`registerAppTool`**：注册带有 `_meta.ui.resourceUri` 字段的工具。宿主调用该工具时，会获取并渲染界面，并在工具结果到达后将其传给界面。
+- **`registerAppResource`**：宿主请求界面资源时，提供打包后的 HTML。
+- **Express 服务器**：在 3001 端口通过 HTTP 提供 MCP Server。
+
+### 界面实现
+
+界面由一个 HTML 页面和一个 TypeScript 模块组成，后者通过 `App` 类与宿主通信。HTML 如下：
+
+```html
+<!-- mcp-app.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Get Time App</title>
+  </head>
+  <body>
+    <p>
+      <strong>Server Time:</strong>
+      <code id="server-time">Loading...</code>
+    </p>
+    <button id="get-time-btn">Get Server Time</button>
+    <script type="module" src="/src/mcp-app.ts"></script>
+  </body>
+</html>
+```
+
+TypeScript 模块如下：
+
+```typescript
+// src/mcp-app.ts
+import { App } from "@modelcontextprotocol/ext-apps";
+
+const serverTimeEl = document.getElementById("server-time")!;
+const getTimeBtn = document.getElementById("get-time-btn")!;
+
+const app = new App({ name: "Get Time App", version: "1.0.0" });
+
+// Establish communication with the host
+app.connect();
+
+// Handle the initial tool result pushed by the host
+app.ontoolresult = (result) => {
+  const time = result.content?.find((c) => c.type === "text")?.text;
+  serverTimeEl.textContent = time ?? "[ERROR]";
+};
+
+// Proactively call tools when users interact with the UI
+getTimeBtn.addEventListener("click", async () => {
+  const result = await app.callServerTool({
+    name: "get-time",
+    arguments: {},
+  });
+  const time = result.content?.find((c) => c.type === "text")?.text;
+  serverTimeEl.textContent = time ?? "[ERROR]";
+});
+```
+
+关键部分：
+
+- **`app.connect()`**：与宿主建立通信，在应用初始化时调用一次。
+- **`app.ontoolresult`**：宿主向应用推送工具结果时触发的回调，例如首次调用工具并渲染界面时。
+- **`app.callServerTool()`**：允许应用主动调用服务器上的工具。每次调用都需要与服务器往返一次，因此设计界面时应妥善处理延迟。
+
+`App` 类还提供日志记录、打开 URL，以及使用应用的结构化数据更新模型上下文等方法。完整说明见 [API 文档](https://apps.extensions.modelcontextprotocol.io/api/)。
+
+## 测试应用
+
+测试 MCP App 时，先构建界面并启动本地服务器：
+
+<CodeGroup>
+
+```bash macOS/Linux
+npm run build && npm run serve
+```
+
+```powershell Windows
+npm run build; npm run serve
+```
+
+</CodeGroup>
+
+默认配置下，服务器地址为 `http://localhost:3001/mcp`。要实际看到应用渲染，还需要一个支持 MCP Apps 的 MCP Host。你有几种选择。
+
+### 使用 Claude 测试
+
+[Claude](https://claude.ai)（Web）与 [Claude Desktop](https://claude.ai/download) 都支持 MCP Apps。进行本地开发时，需要将服务器暴露到互联网。你可以在本地运行 MCP Server，再使用 `cloudflared` 等工具建立隧道来转发流量。
+
+在另一个终端运行：
+
+```bash
+npx cloudflared tunnel --url http://localhost:3001
+```
+
+复制生成的 URL，例如 `https://random-name.trycloudflare.com`，并将其添加为 Claude 的[自定义连接器](https://support.anthropic.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp)：点击个人资料，依次进入 **Settings**、**Connectors**，最后选择 **Add custom connector**。
+
+<Note>
+
+自定义连接器适用于 Claude 付费套餐，包括 Pro、Max 和 Team。
+
+</Note>
+
+<Frame caption="在 Claude 中添加自定义连接器">
+  <img
+    src="../../images/quickstart-apps/add-custom-connector.gif"
+    alt="在 Claude 中添加自定义连接器"
+  />
+</Frame>
+
+### 使用 basic-host 测试
+
+`ext-apps` 仓库包含供开发使用的测试宿主。克隆仓库并安装依赖：
+
+<CodeGroup>
+
+```bash macOS/Linux
+git clone https://github.com/modelcontextprotocol/ext-apps.git
+cd ext-apps/examples/basic-host
+npm install
+```
+
+```powershell Windows
+git clone https://github.com/modelcontextprotocol/ext-apps.git
+cd ext-apps\examples\basic-host
+npm install
+```
+
+</CodeGroup>
+
+在 `ext-apps/examples/basic-host/` 中运行 `npm start`，即可启动 basic-host 测试界面。要连接特定服务器，例如你正在开发的服务器，可以在命令前设置 `SERVERS` 环境变量：
+
+<CodeGroup>
+
+```bash macOS/Linux
+SERVERS='["http://localhost:3001/mcp"]' npm start
+```
+
+```powershell Windows
+$env:SERVERS='["http://localhost:3001/mcp"]'; npm start
+```
+
+</CodeGroup>
+
+打开 `http://localhost:8080`，你会看到一个可选择并调用工具的简单界面。调用工具时，宿主会获取界面资源，并在沙箱 iframe 中渲染。随后即可与应用交互，验证工具调用能否正常工作。
+
+<Frame caption="使用 basic-host 测试二维码 MCP App">
+  <img
+    src="../../images/quickstart-apps/qr-code-server.gif"
+    alt="二维码 MCP App 在 basic-host 中运行的示例"
+  />
+</Frame>
+
+## 深入了解
+
+<CardGroup cols={2}>
+  <Card
+    title="API 文档"
+    icon="book"
+    href="https://apps.extensions.modelcontextprotocol.io/api/"
+  >
+    完整 SDK 参考与 API 详情
+  </Card>
+  <Card
+    title="GitHub 仓库"
+    icon="github"
+    href="https://github.com/modelcontextprotocol/ext-apps"
+  >
+    源码、示例和问题跟踪
+  </Card>
+  <Card
+    title="规范"
+    icon="file-lines"
+    href="https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/draft/apps.mdx"
+  >
+    面向实现者的技术规范
+  </Card>
+</CardGroup>
+
+## 反馈
+
+MCP Apps 正在积极开发中。如果遇到问题，或对改进方向有想法，请在 [GitHub 仓库](https://github.com/modelcontextprotocol/ext-apps/issues)提交 Issue。关于扩展发展方向的更广泛讨论，欢迎加入 [GitHub Discussions](https://github.com/modelcontextprotocol/ext-apps/discussions)。

@@ -1,0 +1,4 @@
+---
+interface Props {name:string;comment?:string;}
+---
+<li class="tree-file"><span aria-hidden="true">▤</span> <code>{Astro.props.name}</code>{Astro.props.comment&&<span class="tree-comment">{Astro.props.comment}</span>}</li>

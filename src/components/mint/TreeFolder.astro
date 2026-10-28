@@ -1,0 +1,4 @@
+---
+interface Props {name:string;defaultOpen?:boolean;}
+---
+<li><details open={Astro.props.defaultOpen}><summary><span aria-hidden="true">▱</span> {Astro.props.name}</summary><ul><slot /></ul></details></li>

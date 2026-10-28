@@ -3,17 +3,19 @@ import '@fontsource-variable/inter';
 import '../styles/official.css';
 import Icon from '../components/Icon.astro';
 import Search from '../components/Search.astro';
-import {groups,local,base} from '../lib/navigation';
+import {sections,sectionFor,local,base} from '../lib/navigation';
 import source from '../../upstream/manifest.json';
 import site from '../../content/site.json';
 interface Props {title:string;path:string;description?:string;headings:{depth:number;slug:string;text:string}[];}
 const {title,path,description='',headings=[]}=Astro.props;
+const currentSection=sectionFor(path);
+const groups=sections[currentSection].groups;
 type NavItem={path?:string;children?:NavItem[]};
 const hasPath=(items:NavItem[]):boolean=>items.some(i=>i.path===path||(i.children&&hasPath(i.children)));
 const group=groups.find(g=>hasPath(g.items))?.title||'文档';
 const sample=site.pages.some(p=>p.path===path);
 const toc=headings.filter(h=>h.depth>=2&&h.depth<=(path.endsWith('architecture')?3:2));
-const pages=site.pages;
+const pages=site.pages.filter(p=>(p.section||'docs')===currentSection);
 const index=pages.findIndex(p=>p.path===path);
 const prev=pages[index-1],next=pages[index+1];
 ---
@@ -41,7 +43,7 @@ const prev=pages[index-1],next=pages[index+1];
    <button class="icon-button theme-toggle" aria-label="切换明暗主题"><Icon name="monitor" size={18}/></button>
   </div>
   <nav class="section-tabs" aria-label="主要导航">
-   <a class="active" href={local('')}>文档</a><a href="https://modelcontextprotocol.io/specification/2026-07-28">协议规范</a><a href="https://modelcontextprotocol.io/extensions/overview">扩展</a><a href="https://modelcontextprotocol.io/registry/about">Registry</a><a href="https://modelcontextprotocol.io/seps">SEPs</a><a href="https://modelcontextprotocol.io/community/contributing">社区</a>
+   {Object.entries(sections).map(([key,section])=><a class:list={[{active:currentSection===key}]} href={local(section.entry)}>{section.label}</a>)}<a href="https://modelcontextprotocol.io/registry/about">Registry</a><a href="https://modelcontextprotocol.io/seps">SEPs</a><a href="https://modelcontextprotocol.io/community/contributing">社区</a>
   </nav>
  </header>
  <div class="mobile-backdrop"></div>
@@ -53,7 +55,7 @@ const prev=pages[index-1],next=pages[index+1];
   <main id="content-area" class="doc-main" data-pagefind-body>
    <div class="page-group">{group}</div>
    <div class="page-heading"><h1 id="page-title" data-pagefind-meta="title">{title}</h1><button class="copy-page" aria-label="复制页面" data-copy-url={sample?`${local(path)}.md`:undefined}><Icon name="copy" size={16}/><span>复制页面</span></button></div>
-   <div id="content" class="mdx-content"><slot/></div>
+   <div id="doc-content" class="mdx-content"><slot/></div>
    {sample&&<div class="translation-attribution" data-pagefind-ignore><span>非官方简体中文译本</span><a href={`https://modelcontextprotocol.io/${path}`}>英文原文 ↗</a><a href={`https://github.com/modelcontextprotocol/modelcontextprotocol/tree/${source.commit}`}>源码 {source.commit.slice(0,7)}</a></div>}
    <nav class="pagination" aria-label="翻页" data-pagefind-ignore>{prev?<a href={local(prev.path)}><span>← 上一篇</span><strong>{prev.label}</strong></a>:<span/>}{next&&<a class="next" href={local(next.path)}><span>下一篇 →</span><strong>{next.label}</strong></a>}</nav>
    <footer data-pagefind-ignore><div><a href="https://github.com/CBx-2023/mcp-zh-docs">GitHub</a><a href="https://discord.gg/6CSzBmMkjX">Discord</a></div><p>原文 © Model Context Protocol 及其贡献者。<br/>非官方简体中文译本 · <a href={local('translation-guide')}>翻译说明</a> · <a href={`${base}/upstream-license.txt`}>原文许可</a></p></footer>

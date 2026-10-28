@@ -1,0 +1,17 @@
+[
+  "user-interaction-model",
+  "capabilities",
+  "protocol-messages",
+  "listing-skills",
+  "getting-a-skill",
+  "reading-skill-content",
+  "reading-directories",
+  "message-flow",
+  "integrity-and-verification",
+  "implementation-requirements",
+  "servers",
+  "security-considerations",
+  "error-handling",
+  "client-support",
+  "specification"
+]

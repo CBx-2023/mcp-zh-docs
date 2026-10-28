@@ -1,0 +1,9 @@
+[
+  "cancellation-flow",
+  "transport-specific-cancellation",
+  "timeouts",
+  "behavior-requirements",
+  "timing-considerations",
+  "implementation-notes",
+  "error-handling"
+]

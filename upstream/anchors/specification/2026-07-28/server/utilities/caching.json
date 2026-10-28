@@ -1,0 +1,12 @@
+[
+  "cacheable-results",
+  "cache-key",
+  "cacheable-model",
+  "time-to-live-ttl-field",
+  "freshness-calculation",
+  "cache-scope-field",
+  "choosing-a-cache-scope",
+  "interaction-with-notifications",
+  "interaction-with-pagination",
+  "security-considerations"
+]

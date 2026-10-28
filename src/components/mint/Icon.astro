@@ -3,4 +3,4 @@ interface Props {icon:string;size?:number;}
 const labels:Record<string,string>={'square-js':'JS',python:'Py','square-c':'C#',golang:'Go',rust:'Rs',gem:'Rb',java:'Jv',swift:'Sw',php:'PHP','square-k':'Kt'};
 const {icon,size=24}=Astro.props;
 ---
-<span class="sdk-icon" style={`--sdk-size:${size}px`} aria-hidden="true">{labels[icon]||icon.slice(0,2)}</span>
+<span class:list={['sdk-icon',{'extension-check':icon==='check'}]} style={`--sdk-size:${size}px`} aria-hidden="true">{icon==='check'?'✓':labels[icon]||icon.slice(0,2)}</span>

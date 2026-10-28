@@ -1,0 +1,14 @@
+[
+  "user-interaction-model",
+  "capabilities",
+  "protocol-messages",
+  "listing-roots",
+  "message-flow",
+  "data-types",
+  "root",
+  "project-directory",
+  "multiple-repositories",
+  "error-handling",
+  "security-considerations",
+  "implementation-guidelines"
+]

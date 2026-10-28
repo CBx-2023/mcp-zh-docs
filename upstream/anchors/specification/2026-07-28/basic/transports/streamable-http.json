@@ -1,0 +1,20 @@
+[
+  "security-&-endpoint",
+  "sending-messages",
+  "receiving-messages",
+  "message-flow",
+  "cancellation",
+  "request-metadata",
+  "protocol-version-header",
+  "standard-request-headers",
+  "custom-headers-from-tool-parameters",
+  "schema-extension",
+  "value-encoding",
+  "client-behavior",
+  "server-behavior-for-custom-headers",
+  "case-sensitivity",
+  "server-validation",
+  "backward-compatibility",
+  "earlier-streamable-http-revisions",
+  "http+sse-transport-2024-11-05"
+]

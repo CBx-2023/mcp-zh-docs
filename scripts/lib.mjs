@@ -17,3 +17,19 @@ export function nodes(text, type) {
 export const raw = (text, node) => text.slice(node.position.start.offset, node.position.end.offset);
 export const sourcePath = page => `upstream/docs/${page.path}.mdx`;
 export const translatedPath = page => `translations/zh-CN/${page.path}.mdx`;
+export const canonicalPath = route => route.replace(/^\//,'').replace(/\/index$/,'');
+export function localReference(ref){
+  const [pathname,...tail]=ref.split(/(?=[#?])/);
+  const known=new Set(site.pages.map(p=>'/'+canonicalPath(p.path)));
+  let candidate=pathname.replace(/\/index\/?$/,'').replace(/\/$/,'');
+  const versioned=candidate.replace(/^\/specification\/latest(?=\/|$)/,'/specification/2026-07-28');
+  if(known.has(versioned))candidate=versioned;
+  const extension=candidate.replace(/^\/docs\/extensions\//,'/extensions/');
+  if(known.has(extension))candidate=extension;
+  const normalized=(known.has(candidate)?candidate:pathname)+tail.join('');
+  const historical={
+    '/specification/2026-07-28/basic/authorization#dynamic-client-registration':'/specification/2026-07-28/basic/authorization/client-registration#dynamic-client-registration',
+    '/specification/2026-07-28/basic/transports#stdio':'/specification/2026-07-28/basic/transports/stdio'
+  };
+  return historical[normalized]||normalized;
+}

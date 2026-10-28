@@ -3,8 +3,10 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { toString } from 'mdast-util-to-string';
+import { localReference } from './lib.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const anchorAliases=JSON.parse(readFileSync(path.join(root,'content/anchor-aliases.json'),'utf8'));
 const element = (name,attributes,children) => ({ type:'mdxJsxFlowElement', name, attributes, children });
 const attribute = (name,value) => ({type:'mdxJsxAttribute',name,value});
 
@@ -14,6 +16,7 @@ export function remarkCompatibility() {
     if(!filePath.includes('/src/content/docs/'))return;
     const match = filePath.match(/src\/content\/docs\/([^.]+)\.mdx$/);
     const route = match?.[1];
+    if(route==='specification/2026-07-28/schema'&&tree.children.some(n=>n.name==='SchemaReference'))return;
     const headings = route?JSON.parse(readFileSync(path.join(root,'src/generated/headings.json'),'utf8'))[route]:null;
     let headingIndex = 0;
     let accordionIndex = 0;
@@ -32,9 +35,15 @@ export function remarkCompatibility() {
         if(route==='docs/2026-07-28/develop/connect-local-servers'&&accordionIndex===1)node.attributes.push(attribute('id','getting-logs-from-claude-for-desktop'));
         accordionIndex++;
       }
-      if(['link','image'].includes(node.type) && node.url.startsWith('.')&&route) node.url = path.posix.resolve('/',path.posix.dirname(route),node.url);
-      if(['link','image'].includes(node.type) && node.url.startsWith('/')&&!node.url.startsWith('/mcp-zh-docs/'))node.url='/mcp-zh-docs'+node.url;
-      for(const attr of node.attributes??[])if(['href','src'].includes(attr.name)&&typeof attr.value==='string'&&attr.value.startsWith('/')&&!attr.value.startsWith('/mcp-zh-docs/'))attr.value='/mcp-zh-docs'+attr.value;
+      if(['link','image','definition'].includes(node.type) && node.url.startsWith('.')&&route) node.url = path.posix.resolve('/',path.posix.dirname(route),node.url);
+      if(['link','image','definition'].includes(node.type) && node.url.startsWith('/'))node.url=localReference(node.url);
+      if(['link','image','definition'].includes(node.type) && node.url.startsWith('/')&&!node.url.startsWith('/mcp-zh-docs/'))node.url='/mcp-zh-docs'+node.url;
+      for(const attr of node.attributes??[])if(['href','src'].includes(attr.name)&&typeof attr.value==='string'){
+        if(node.name==='use'&&attr.value==='assets/icons.svg#icon-anchor')attr.value='/assets/typedoc-icons.svg#icon-anchor';
+        else if(attr.value.startsWith('.')&&route)attr.value=path.posix.resolve('/',path.posix.dirname(route),attr.value);
+        if(attr.value.startsWith('/'))attr.value=localReference(attr.value);
+        if(attr.value.startsWith('/')&&!attr.value.startsWith('/mcp-zh-docs/'))attr.value='/mcp-zh-docs'+attr.value;
+      }
       if(node.type==='mdxJsxFlowElement' && node.name==='CodeGroup') {
         node.name='Tabs';
         node.attributes=[];
@@ -47,6 +56,18 @@ export function remarkCompatibility() {
     visit(tree,'code',(node,index,parent)=>{
       if(node.lang==='mermaid') parent.children[index]=element('Mermaid',[attribute('source',node.value)],[]);
     });
+    const aliases=anchorAliases[route]||{};
+    function addAliases(parent){
+      if(!parent.children)return;
+      for(let i=parent.children.length-1;i>=0;i--){
+        const child=parent.children[i];
+        addAliases(child);
+        if(child.type==='heading')for(const [alias,target]of Object.entries(aliases))if(child.data?.hProperties?.id===target){
+          parent.children.splice(i,0,element('span',[attribute('id',alias),attribute('className','source-anchor'),attribute('aria-hidden','true')],[]));
+        }
+      }
+    }
+    addAliases(tree);
     if(headings&&headingIndex!==headings.length) throw new Error(`Heading count changed: ${route}`);
   };
 }
