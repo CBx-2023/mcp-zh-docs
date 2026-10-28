@@ -1,0 +1,68 @@
+---
+title: 什么是 Model Context Protocol（MCP）？
+sidebarTitle: What is MCP?
+---
+
+MCP（Model Context Protocol，模型上下文协议）是一项用于连接 AI 应用与外部系统的开源标准。
+
+借助 MCP，Claude、ChatGPT 等 AI 应用可以连接数据源（如本地文件、数据库）、工具（如搜索引擎、计算器）和工作流（如专门设计的提示模板），从而获取关键信息并执行任务。
+
+你可以把 MCP 想象成 AI 应用的 USB-C 接口。USB-C 为电子设备提供了统一的连接方式，MCP 则为 AI 应用连接外部系统提供了统一的方式。
+
+<Frame>
+  <img src="/images/mcp-simple-diagram.png" />
+</Frame>
+## MCP 能实现什么？
+
+- 智能体可以访问你的 Google Calendar 和 Notion，成为更懂你的 AI 助手。
+- Claude Code 可以根据 Figma 设计生成完整的 Web 应用。
+- 企业聊天机器人可以连接组织内的多个数据库，让用户通过对话分析数据。
+- AI 模型可以在 Blender 中创建 3D 设计，再用 3D 打印机将其打印出来。
+## 为什么 MCP 很重要？
+
+对于生态中的不同参与者，MCP 带来的价值各有侧重。
+- **开发者**：MCP 降低了构建 AI 应用或智能体，以及为其集成外部能力的开发时间和复杂度。
+- **AI 应用或智能体**：MCP 让它们能够接入丰富的数据源、工具和应用，增强自身能力，改善最终用户的体验。
+- **最终用户**：MCP 让 AI 应用或智能体更强大，使其能够访问用户数据，并在需要时代表用户采取行动。
+## 广泛的生态支持
+MCP 是一种开放协议，已得到多种客户端和服务器的支持。AI 助手如 [Claude](https://claude.com/docs/connectors/building) 和 [ChatGPT](https://developers.openai.com/api/docs/mcp/)，开发工具如 [Visual Studio Code](https://code.visualstudio.com/docs/copilot/chat/mcp-servers)、[Cursor](https://cursor.com/docs/context/mcp)、[MCPJam](https://docs.mcpjam.com/getting-started) 等均支持 MCP，让你一次构建，即可在不同环境中集成使用。
+## 开始构建
+
+<CardGroup cols={2}>
+  <Card title="构建服务器" icon="server" href="/docs/2026-07-28/develop/build-server">
+    创建 MCP Server，提供你的数据和工具
+  </Card>
+
+<Card
+  title="构建客户端"
+  icon="computer"
+  href="/docs/2026-07-28/develop/build-client"
+>
+  开发能够连接 MCP Server 的应用
+</Card>
+  <Card title="构建 MCP Apps" icon="puzzle-piece" href="/extensions/apps/overview">
+    构建可在 AI 客户端中运行的交互式应用
+  </Card>
+</CardGroup>
+## 深入了解
+
+<CardGroup cols={2}>
+  <Card title="架构" icon="book" href="/docs/2026-07-28/learn/architecture">
+    了解 MCP 的核心概念与架构
+  </Card>
+
+  <Card
+    title="安全"
+    icon="lock"
+    href="/docs/2026-07-28/tutorials/security/security_best_practices"
+  >
+    理解 MCP 实现中的安全注意事项与最佳实践
+  </Card>
+</CardGroup>
+## 社区
+
+<CardGroup cols={2}>
+  <Card title="参与贡献" icon="users" href="/community/contributing">
+    了解如何参与 MCP 并作出贡献
+  </Card>
+</CardGroup>

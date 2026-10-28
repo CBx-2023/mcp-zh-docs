@@ -1,0 +1,21 @@
+{
+  "Model Context Protocol": "Model Context Protocol（模型上下文协议）",
+  "Host": "宿主应用（Host）",
+  "Client": "客户端（Client）",
+  "Server": "服务器（Server）",
+  "Transport": "传输层／传输方式（视语境）",
+  "Schema": "Schema",
+  "Primitives": "基本原语",
+  "Tools": "工具",
+  "Resources": "资源",
+  "Prompts": "提示模板",
+  "Discovery": "发现",
+  "Capabilities": "能力",
+  "Elicitation": "信息征询",
+  "Sampling": "采样",
+  "Notifications": "通知",
+  "Statelessness": "无状态性",
+  "MUST": "必须",
+  "SHOULD": "应当",
+  "MAY": "可以"
+}

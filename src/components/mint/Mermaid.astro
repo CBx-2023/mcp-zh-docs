@@ -1,0 +1,24 @@
+---
+interface Props { source: string; }
+---
+<div class="mermaid-diagram" data-mermaid-source={Astro.props.source} data-pagefind-ignore>
+  <pre>{Astro.props.source}</pre>
+</div>
+<script>
+  async function renderDiagrams() {
+    const containers = document.querySelectorAll<HTMLElement>('[data-mermaid-source]:not([data-rendered])');
+    if(!containers.length) return;
+    const {default:mermaid} = await import('mermaid');
+    mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'neutral',fontFamily:'system-ui, sans-serif'});
+    for(const [index,container] of [...containers].entries()) {
+      try {
+        const {svg} = await mermaid.render(`mcp-diagram-${index}`,container.dataset.mermaidSource!);
+        container.innerHTML=svg;
+        container.dataset.rendered='true';
+        container.setAttribute('role','img');
+        container.setAttribute('aria-label','MCP 架构图（图中文字保留英文原文）');
+      } catch { container.dataset.rendered='error'; }
+    }
+  }
+  renderDiagrams();
+</script>

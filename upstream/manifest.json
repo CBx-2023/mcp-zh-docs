@@ -1,0 +1,79 @@
+{
+  "repository": "https://github.com/modelcontextprotocol/modelcontextprotocol",
+  "commit": "ccaf9102ec5eb656eab50ca8333ef49dcd259c26",
+  "version": "2026-07-28",
+  "retrievedAt": "2026-10-28",
+  "files": [
+    {
+      "path": "docs/docs.json",
+      "sha256": "9de85c9428d5b0de4ef2ddf712c035989157ead878a92556eab564b2c02770fb"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a"
+    },
+    {
+      "path": "README.md",
+      "sha256": "7e98444c73ed5d923a3b02b1247e9cdf678d31a30cc32b1503bdcd906aa984e2"
+    },
+    {
+      "path": "docs/docs/2026-07-28/getting-started/intro.mdx",
+      "sha256": "7739ec9fd093fa00d5e53c964ee91b8263e15bb306050036069b66750bed37f5"
+    },
+    {
+      "path": "docs/docs/2026-07-28/learn/architecture.mdx",
+      "sha256": "4a79af6c1e7e336b5673e2270168357cd704d67ad82fd7d0155f96f75f5a2825"
+    },
+    {
+      "path": "docs/docs/2026-07-28/develop/build-server.mdx",
+      "sha256": "426c2d2c4f2500d2fc7c54e84ea4608919aeb31c158932be105fa030ae9da0cd"
+    }
+  ],
+  "assets": [
+    {
+      "path": "public/images/available-mcp-tools.png",
+      "sourcePath": "docs/images/available-mcp-tools.png",
+      "sha256": "0228d1c011551d21ae05a79ff4507af203b6c90a705dbae59f7a3dbf4c7a2f9d"
+    },
+    {
+      "path": "public/images/claude-add-files-connectors-and-more.png",
+      "sourcePath": "docs/images/claude-add-files-connectors-and-more.png",
+      "sha256": "c4fbbc2eb6fa09ffc5d21030ecc59f44ed84da232e75a38122c15c19dbd0c108"
+    },
+    {
+      "path": "public/images/current-weather.png",
+      "sourcePath": "docs/images/current-weather.png",
+      "sha256": "adeb83519e673f9367b41329aa35485519d53890016d84417c99633a5ca46066"
+    },
+    {
+      "path": "public/images/mcp-simple-diagram.png",
+      "sourcePath": "docs/images/mcp-simple-diagram.png",
+      "sha256": "fefd5ea7eeb7289f1d9f00552ce798f2298b1f588a8733a79b9ee4c10512e7c2"
+    },
+    {
+      "path": "public/images/visual-indicator-mcp-tools.png",
+      "sourcePath": "docs/images/visual-indicator-mcp-tools.png",
+      "sha256": "6f3b91a630431c24a3e9629b15adbc1b6ca11c976261da3551b3f273e31fdc1a"
+    },
+    {
+      "path": "public/images/weather-alerts.png",
+      "sourcePath": "docs/images/weather-alerts.png",
+      "sha256": "fe056fc9073a97575d4bd324d1f7cd757e6d6e4d4e6740be14ce7470fb34d272"
+    },
+    {
+      "path": "public/logo/dark.svg",
+      "sourcePath": "docs/logo/dark.svg",
+      "sha256": "ae239dea9d037a331575487390bf900d6baacf896991185b3dd861ac4b9941d5"
+    },
+    {
+      "path": "public/logo/light.svg",
+      "sourcePath": "docs/logo/light.svg",
+      "sha256": "3163a85f9db4b98c3b5af846ea284b3296295dbd51a138b2e77ebd438342e902"
+    },
+    {
+      "path": "public/favicon.svg",
+      "sourcePath": "docs/favicon.svg",
+      "sha256": "f6f33e24e95846f9ae2582ab72c4eae7beec5ec52c13d767d9f342bf639dd3e6"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+---
+title: 翻译约定与进度
+description: 本站的翻译范围、保真规则、版本来源与许可说明。
+---
+
+本站是 MCP 官方文档的**非官方简体中文学习译本**。当前版本为 `2026-07-28`，首期开放三篇样稿。未完成翻译的文档链接会前往官方英文页面。
+
+## 当前进度
+
+| 文档 | 状态 | 内容 |
+| --- | --- | --- |
+| [什么是 MCP？](/docs/2026-07-28/getting-started/intro/) | 中文样稿 | 概念、价值与生态 |
+| [架构概览](/docs/2026-07-28/learn/architecture/) | 中文样稿 | 协议分层、发现、工具调用与通知 |
+| [构建 MCP Server](/docs/2026-07-28/develop/build-server/) | 中文样稿 | Python、TypeScript、Java、Kotlin、C#、Ruby、Rust、Go |
+
+样稿已进行译文复核与结构校验，仍欢迎通过 GitHub 提交勘误。这一状态不代表官方认可，也不代表文中的所有语言示例都已经运行验证。
+
+## 翻译规则
+
+1. 翻译自然语言，保留准确的技术含义。首次出现的重要术语提供中文解释，必要时保留英文。
+2. 代码块、代码注释、字符串、行内代码和 Mermaid 源码均保留原样。
+3. 译文 MDX 的 Frontmatter 仅翻译 `title` 的值，其余键和值保持原样。
+4. 链接目标、图片路径、显式锚点、节点标记与组件结构保持原样。
+5. 组件中可见的自然语言标题、说明及提示文字可以翻译，功能属性和表达式保持原样。
+6. 网站构建层适配导航、组件和锚点，不回写原文或译文。原英文标题的锚点在中文页面中继续有效。
+
+正文中的“必须”“应当”“可以”分别保留原文相应的要求强度。翻译不擅自修正上游示例；原文中可能存在的问题应单独记录，并与译文区分。
+
+## 常用术语
+
+| 英文 | 本站用法 |
+| --- | --- |
+| Host | 宿主应用；语境清楚时使用 Host |
+| Client / Server | 客户端／服务器，或 MCP Client / MCP Server |
+| Transport | 传输层／传输方式，视语境而定 |
+| Schema | 保留 Schema |
+| Primitives | 基本原语 |
+| Tools / Resources / Prompts | 工具／资源／提示模板 |
+| Discovery / Capabilities | 发现／能力 |
+| Elicitation / Sampling | 信息征询／采样 |
+| Notifications / Statelessness | 通知／无状态性 |
+
+## 版本与来源
+
+译本固定于官方仓库的 commit [`ccaf910`](https://github.com/modelcontextprotocol/modelcontextprotocol/tree/ccaf9102ec5eb656eab50ca8333ef49dcd259c26)，获取日期为 **2026 年 10 月 28 日**。协议版本日期与文档源码快照日期是两个不同概念。
+
+每篇样稿均保留对应的英文原文入口。[源码清单](/source-manifest.json)记录源文件哈希；[GitHub 仓库](https://github.com/CBx-2023/mcp-zh-docs)保存英文快照、译文、术语表及构建脚本。
+
+## 署名与许可
+
+原文来自 [Model Context Protocol 项目](https://github.com/modelcontextprotocol/modelcontextprotocol)，版权与署名归原作者及贡献者所有。本站对自然语言进行了简体中文翻译，并适配了网站展示。
+
+上游快照的许可说明区分文档、规范、代码及历史贡献，详见[随快照保留的完整 LICENSE](/upstream-license.txt)。本站不将这些材料统一重标为另一种许可证。图示、截图与第三方产品名称保留其原有权利归属。
+
+本站由社区独立维护，与 MCP 官方、Anthropic 或其他相关组织无隶属或背书关系。

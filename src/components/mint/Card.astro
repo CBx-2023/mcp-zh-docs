@@ -1,0 +1,10 @@
+---
+interface Props { title: string; href: string; icon?: string; }
+import Icon from '../Icon.astro';
+const { title, href, icon } = Astro.props;
+---
+<a class="mint-card not-content" href={href}>
+  <span class="mint-card-icon"><Icon name={icon||'book'} size={24}/></span>
+  <span class="mint-card-title">{title}</span>
+  <div class="mint-card-description"><slot /></div>
+</a>

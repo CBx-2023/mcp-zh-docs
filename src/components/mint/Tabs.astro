@@ -1,0 +1,24 @@
+---
+import { Tabs as StarlightTabs } from '@astrojs/starlight/components';
+---
+<StarlightTabs><slot /></StarlightTabs>
+<script>
+  function revealHashTarget() {
+    if(!location.hash) return;
+    let id: string;
+    try { id=decodeURIComponent(location.hash.slice(1)); } catch { return; }
+    const target=document.getElementById(id);
+    if(!target) return;
+    const panels:HTMLElement[]=[];
+    let panel=target.closest<HTMLElement>('[role="tabpanel"]');
+    while(panel) { panels.unshift(panel); panel=panel.parentElement?.closest<HTMLElement>('[role="tabpanel"]')??null; }
+    for(const p of panels) {
+      const label=p.getAttribute('aria-labelledby');
+      if(label) document.getElementById(label)?.click();
+    }
+    for(let p=target.parentElement;p;p=p.parentElement) if(p instanceof HTMLDetailsElement) p.open=true;
+    if(panels.length) requestAnimationFrame(()=>target.scrollIntoView({block:'start'}));
+  }
+  window.addEventListener('hashchange',revealHashTarget);
+  customElements.whenDefined('starlight-tabs').then(revealHashTarget);
+</script>

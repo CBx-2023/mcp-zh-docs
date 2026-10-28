@@ -1,0 +1,10 @@
+{
+  "name": "MCP 中文学习文档",
+  "version": "2026-07-28",
+  "repository": "https://github.com/CBx-2023/mcp-zh-docs",
+  "pages": [
+    { "path": "docs/2026-07-28/getting-started/intro", "label": "什么是 MCP？", "description": "理解 Model Context Protocol，开始连接 AI 与外部世界。", "status": "sample" },
+    { "path": "docs/2026-07-28/learn/architecture", "label": "架构概览", "description": "从 Host、Client 和 Server，到协议分层、工具调用与通知。", "status": "sample" },
+    { "path": "docs/2026-07-28/develop/build-server", "label": "构建 MCP Server", "description": "使用八种语言构建天气服务，并连接 Claude Desktop。", "status": "sample" }
+  ]
+}
