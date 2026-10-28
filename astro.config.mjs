@@ -9,7 +9,7 @@ export default defineConfig({
   trailingSlash: 'always',
   markdown: { processor: unified({ smartypants:false, remarkPlugins:[remarkCompatibility] }) },
   integrations: [
-    expressiveCode({ themes:['github-light','github-dark'], defaultLocale:'zh-CN', styleOverrides:{borderRadius:'0.75rem',codeFontSize:'0.8125rem'} }),
+    expressiveCode({ themes:['github-light','github-dark'], defaultLocale:'zh-CN', shiki:{langAlias:{env:'dotenv'}}, styleOverrides:{borderRadius:'0.75rem',codeFontSize:'0.8125rem'} }),
     mdx(),
   ],
 });

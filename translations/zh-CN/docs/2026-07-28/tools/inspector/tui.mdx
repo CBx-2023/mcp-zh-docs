@@ -1,0 +1,92 @@
+---
+title: TUI 客户端
+description: "The terminal MCP Inspector: navigation, tabs, and keyboard reference"
+---
+
+TUI 是 Inspector 的终端界面，与 Web 客户端一样，能够交互式地探索工具、资源和提示模板。可以在通过 SSH 连接的远程主机、受限环境中使用，也适合希望始终留在终端里的用户。
+
+```bash
+npx @modelcontextprotocol/inspector --tui node build/index.js   # with an ad-hoc stdio server
+```
+
+<Frame caption="TUI 已连接服务器，在 Tools 标签页中显示工具的输入 Schema。">
+  <img src="/images/inspector/tui-tools.png" />
+</Frame>
+
+## 选择服务器
+
+与 CLI 不同，TUI 没有用于选择单个条目的 `--server <name>` 参数：它从 Catalog 或 config 文件读取服务器，加载文件中的全部服务器，然后让你从屏幕上的列表中选择：
+
+```bash
+mcp-inspector --tui --catalog mcp.json   # writable catalog, seeded empty if missing
+mcp-inspector --tui --config mcp.json    # read-only session, errors if absent
+```
+
+如果既没有 `--catalog`，也没有 `--config`，并且未指定[临时目标](/docs/2026-07-28/tools/inspector/configuration#ad-hoc-targets)，它会使用默认的可写 Catalog `~/.mcp-inspector/mcp.json`。详见[配置与参数](/docs/2026-07-28/tools/inspector/configuration)。
+
+TUI 也接受[共享的服务器选择参数](/docs/2026-07-28/tools/inspector/configuration#shared-server-selection-flags)（`--server-url`、`--transport`、`--header`、`-e`、`--cwd`），以及为临时服务器设置的 `--protocol-era`，还接受 [OAuth 客户端参数](/docs/2026-07-28/tools/inspector/configuration#cli-and-tui-oauth-client-flags)（`--client-id`、`--client-secret`、`--client-metadata-url`、`--client-config`、`--callback-url`）。
+
+## 标签页
+
+| 标签页               | 按键 | 显示内容                                                                                                                         |
+| ----------------- | --- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Info（信息）**          | `i` | 服务器配置、名称、版本和使用说明，以及客户端声明的根目录（按 `e` 编辑）。                  |
+| **Auth（授权）**          | `a` | 所选 HTTP 或 SSE 服务器的 OAuth 状态，以及 **Clear OAuth State（清除 OAuth 状态）** 操作（`s`），该操作还会断开当前连接。 |
+| **Resources（资源）**     | `r` | 浏览和读取资源。                                                                                                            |
+| **Subscriptions（订阅）** | `u` | 订阅和取消订阅资源，适用于支持资源订阅的服务器。                                            |
+| **Prompts（提示模板）**       | `m` | 列出提示模板，并携带参数呈现它们。                                                                                          |
+| **Skills（技能）**        | `k` | 列出服务器的技能，验证其摘要和 Frontmatter，适用于声明了 Skills 扩展的服务器。                          |
+| **Tools（工具）**         | `t` | 查看工具，并通过类似表单的输入执行工具。                                                                                    |
+| **Tasks（任务）**         | `s` | 列出任务、获取结果、取消任务和清除已完成任务，适用于支持 Tasks 的服务器。                                   |
+| **Protocol（协议）**      | `p` | JSON-RPC 请求／响应／通知历史。                                                                                       |
+| **Network（网络）**       | `n` | SSE 和 [Streamable HTTP](/specification/latest/basic/transports) 服务器的 HTTP 通信。                                           |
+| **Console（控制台）**       | `o` | 已连接的 stdio 服务器进程输出的 `stderr`。                                                                                       |
+
+快捷键优先避免冲突，不一定取首字母：**P**rotocol 使用 `p`，因此 Pro**m**pts 使用 `m`；**C**onsole 使用 `o`，因为 `c` 是全局的连接操作。Ta**s**ks 使用唯一未被占用的字母 `s`，因此 Subscriptions 使用 `u`，Skills 使用 `k`。
+
+Auth、Network 和 Console 仅在对应的传输方式下出现；Subscriptions、Skills 和 Tasks 则仅在已连接的服务器支持它们时出现。
+
+## 导航
+
+| 按键                                                          | 操作                                                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `Tab` / `Shift+Tab`                                          | 移动焦点：服务器列表 → 标签栏 → 列表 → 详情                                         |
+| `Left` / `Right` 方向键（焦点在标签栏时），或标签页对应字母 | 切换标签页                                                                                |
+| `Up` / `Down` 方向键                                         | 根据焦点所在面板，选择服务器、在列表中移动，或滚动详情 |
+| `Enter`                                                      | 选择条目、执行工具，或获取资源                                        |
+| `c`                                                          | 连接所选服务器                                                             |
+| `d`                                                          | 断开连接                                                                                 |
+| `/`                                                          | 筛选当前列表（`Enter` 保留筛选条件，`Esc` 清除）                        |
+| `+`                                                          | 全屏打开详情面板                                                          |
+| `y` / `w`                                                    | 在详情对话框中：复制值，或保存到文件（`w` 也可以保存工具结果） |
+| `?`                                                          | 显示或隐藏键盘快捷键帮助                                                           |
+| `Esc` 或 `Ctrl+C`                                            | 退出（若对话框已打开，`Esc` 会先关闭对话框）                                                   |
+
+未打开对话框时，随时按 **`?`**，即可查看完整快捷键参考，包括当前标签页特有的按键。
+
+## 为 HTTP 服务器授权
+
+1. 选择 HTTP 或 SSE 服务器，按 **`c`** 连接。
+2. 如果服务器要求授权，TUI 会自动启动 OAuth，并在浏览器中打开授权 URL。
+3. 浏览器重定向到达 TUI 的回环监听器后，连接会自行完成，无需再按一次 **`c`**。
+4. 使用 **Auth** 标签页检查生成的 OAuth 状态，或清除它。
+
+TUI 的回调监听器默认为 `http://127.0.0.1:6276/oauth/callback`。端口固定是有意的设计：预注册的静态 OAuth 客户端、[客户端 ID 元数据文档（CIMD）](/specification/latest/basic/authorization/client-registration#client-id-metadata-documents)，以及企业管理的 IdP，都需要预先知道重定向 URI。注册该 URI 一次后，即可跨会话使用。如果主机在远程，而浏览器在另一台机器上，请转发回调端口，使重定向能够到达这个监听器；详见[回调 URL](/docs/2026-07-28/tools/inspector/authorization#callback-urls)。
+
+代价是同一时间只有一个 TUI OAuth 流程可以占用该端口；第二个并发流程会报错 `EADDRINUSE`。如需覆盖默认值，可以传入 `--callback-url` 或设置 `MCP_OAUTH_CALLBACK_URL`：为每个实例使用不同的固定端口；如果授权服务器会动态注册重定向 URI，也可以使用 `http://127.0.0.1:0/oauth/callback`，由操作系统分配临时端口。
+
+<Warning>
+  重定向 URI 必须与注册值**完全一致**。在授权服务器看来，`localhost` 和 `127.0.0.1` 是不同的 URI。
+</Warning>
+
+Catalog 中每个服务器的 OAuth 字段（静态客户端 ID／Secret、作用域、企业管理标志）都会自动应用。整个安装实例共享的设置（CIMD、企业 IdP）来自 `~/.mcp-inspector/storage/client.json`，这与 Web 客户端 **Client Settings** 对话框写入的是同一个文件。可以通过 `--client-config` 或 `MCP_CLIENT_CONFIG_PATH` 指向另一个文件。
+
+完整说明见[授权](/docs/2026-07-28/tools/inspector/authorization)。
+
+<Frame caption="Auth 标签页显示与 Web 客户端 Connection Info 相同的 OAuth 字段；如果尚未进行任何授权，则会提示当前还没有 OAuth 信息。">
+  <img src="/images/inspector/tui-auth.png" />
+</Frame>
+
+## 运行要求
+
+TUI 需要支持原始模式的真实 TTY。在无界面的 CI 作业中，它无法正常发挥作用；这种场景请使用 [CLI](/docs/2026-07-28/tools/inspector/cli)。

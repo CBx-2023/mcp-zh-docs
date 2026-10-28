@@ -1,4 +1,4 @@
 ---
-interface Props {title:string;}
+interface Props {title:string;id?:string;}
 ---
-<details class="mint-accordion"><summary>{Astro.props.title}</summary><div><slot /></div></details>
+<details class="mint-accordion" id={Astro.props.id}><summary>{Astro.props.title}</summary><div><slot /></div></details>

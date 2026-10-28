@@ -1,0 +1,5 @@
+---
+import site from '../../content/site.json';
+import {local} from '../lib/navigation';
+---
+<table><thead><tr><th>文档</th><th>状态</th></tr></thead><tbody>{site.pages.map(page=><tr><td><a href={local(page.path)}>{page.label}</a></td><td>已翻译并校验</td></tr>)}</tbody></table>

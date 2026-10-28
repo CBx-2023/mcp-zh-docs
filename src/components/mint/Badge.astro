@@ -1,0 +1,4 @@
+---
+interface Props {color?:string;shape?:string;}
+---
+<span class:list={['mint-badge',`badge-${Astro.props.color||'gray'}`]}><slot /></span>

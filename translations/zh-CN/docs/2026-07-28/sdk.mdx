@@ -1,0 +1,55 @@
+---
+title: SDK
+description: Official SDKs for building with Model Context Protocol
+---
+
+使用官方 SDK 构建 MCP Server 和 Client。SDK 根据功能完整性、协议支持程度和维护承诺划分等级，详情见 [SDK 分级](/community/sdk-tiers)。
+
+## 可用 SDK
+
+| SDK                                                                                             | 仓库                                                                                    |                                                   等级 |
+| :---------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------- | -----------------------------------------------------: |
+| <Icon icon="square-js" size={24} /> &nbsp; [TypeScript](https://ts.sdk.modelcontextprotocol.io) | [modelcontextprotocol/typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk) |   <Badge color="blue" shape="pill">Tier&nbsp;1</Badge> |
+| <Icon icon="python" size={24} /> &nbsp; [Python](https://py.sdk.modelcontextprotocol.io)        | [modelcontextprotocol/python-sdk](https://github.com/modelcontextprotocol/python-sdk)         |   <Badge color="blue" shape="pill">Tier&nbsp;1</Badge> |
+| <Icon icon="square-c" size={24} /> &nbsp; [C#](https://csharp.sdk.modelcontextprotocol.io)      | [modelcontextprotocol/csharp-sdk](https://github.com/modelcontextprotocol/csharp-sdk)         |   <Badge color="blue" shape="pill">Tier&nbsp;1</Badge> |
+| <Icon icon="golang" size={24} /> &nbsp; [Go](https://go.sdk.modelcontextprotocol.io)            | [modelcontextprotocol/go-sdk](https://github.com/modelcontextprotocol/go-sdk)                 |   <Badge color="blue" shape="pill">Tier&nbsp;1</Badge> |
+| <Icon icon="rust" size={24} /> &nbsp; [Rust](https://rust.sdk.modelcontextprotocol.io)          | [modelcontextprotocol/rust-sdk](https://github.com/modelcontextprotocol/rust-sdk)             |   <Badge color="blue" shape="pill">Tier&nbsp;1</Badge> |
+| <Icon icon="gem" size={24} /> &nbsp; [Ruby](https://ruby.sdk.modelcontextprotocol.io)           | [modelcontextprotocol/ruby-sdk](https://github.com/modelcontextprotocol/ruby-sdk)             |   <Badge color="blue" shape="pill">Tier&nbsp;1</Badge> |
+| <Icon icon="java" size={24} /> &nbsp; [Java](https://java.sdk.modelcontextprotocol.io)          | [modelcontextprotocol/java-sdk](https://github.com/modelcontextprotocol/java-sdk)             | <Badge color="purple" shape="pill">Tier&nbsp;2</Badge> |
+| <Icon icon="swift" size={24} /> &nbsp; Swift                                                    | [modelcontextprotocol/swift-sdk](https://github.com/modelcontextprotocol/swift-sdk)           | <Badge color="orange" shape="pill">Tier&nbsp;3</Badge> |
+| <Icon icon="php" size={24} /> &nbsp; [PHP](https://php.sdk.modelcontextprotocol.io)             | [modelcontextprotocol/php-sdk](https://github.com/modelcontextprotocol/php-sdk)               | <Badge color="orange" shape="pill">Tier&nbsp;3</Badge> |
+| <Icon icon="square-k" size={24} /> &nbsp; [Kotlin](https://kotlin.sdk.modelcontextprotocol.io)  | [modelcontextprotocol/kotlin-sdk](https://github.com/modelcontextprotocol/kotlin-sdk)         | <Badge color="orange" shape="pill">Tier&nbsp;3</Badge> |
+
+有关各等级的具体含义，请参阅 [SDK 分级体系](/community/sdk-tiers)。
+
+## 开始使用
+
+各 SDK 提供相同功能，同时遵循各自语言的惯用方式与最佳实践。所有 SDK 均支持：
+
+- 创建提供工具、资源和提示模板的 MCP Server
+- 构建能够连接任意 MCP Server 的 MCP Client
+- 本地与远程传输协议
+- 在保证类型安全的同时遵循协议规范
+
+访问所选语言的 SDK 页面，获取安装说明、文档和示例。
+
+## 后续步骤
+
+准备开始使用 MCP 构建应用了吗？请选择你的方向：
+
+<CardGroup cols={2}>
+  <Card
+    title="构建服务器"
+    icon="server"
+    href="/docs/2026-07-28/develop/build-server"
+  >
+    学习创建你的第一个 MCP Server
+  </Card>
+  <Card
+    title="构建客户端"
+    icon="computer"
+    href="/docs/2026-07-28/develop/build-client"
+  >
+    创建能够连接 MCP Server 的应用
+  </Card>
+</CardGroup>

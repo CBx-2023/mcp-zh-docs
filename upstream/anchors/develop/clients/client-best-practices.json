@@ -1,0 +1,17 @@
+[
+  "progressive-tool-discovery",
+  "when-to-use-progressive-discovery",
+  "choosing-a-discovery-strategy",
+  "using-progressive-discovery",
+  "dynamic-server-management",
+  "implementation-guidelines",
+  "caching",
+  "interaction-with-prompt-caching",
+  "programmatic-tool-calling-/-code-mode",
+  "how-it-works",
+  "choosing-a-sandbox",
+  "execution-architecture",
+  "security-considerations",
+  "error-handling",
+  "combining-both-patterns"
+]

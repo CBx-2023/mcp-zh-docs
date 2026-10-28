@@ -12,3 +12,6 @@ export { default as Accordion } from './mint/Accordion.astro';
 export { default as AccordionGroup } from './mint/AccordionGroup.astro';
 export { default as Tooltip } from './mint/Tooltip.astro';
 export { default as Mermaid } from './mint/Mermaid.astro';
+export { default as Info } from './mint/Info.astro';
+export { default as Badge } from './mint/Badge.astro';
+export { default as Icon } from './mint/Icon.astro';

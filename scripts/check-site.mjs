@@ -3,7 +3,7 @@ import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { load } from 'cheerio';
-import { site } from './lib.mjs';
+import { site, nodes, sourcePath } from './lib.mjs';
 
 const entries = await readdir('dist',{recursive:true});
 const htmlFiles = entries.filter(p=>p.endsWith('.html'));
@@ -48,7 +48,7 @@ for(const page of site.pages) {
   const doc=documents.get(`${page.path}/index.html`);
   assert.ok(doc,`Missing translation page ${page.path}`);
   for(const id of headings[page.path]) if(!doc.ids.has(id)) errors.push(`${page.path}: lost original anchor ${id}`);
-  const expected=page.path.endsWith('architecture')?14:page.path.endsWith('build-server')?124:0;
+  const expected=nodes(await readFile(sourcePath(page),'utf8'),'code').filter(n=>n.lang!=='mermaid').length;
   if(doc.$('pre').length<expected) errors.push(`${page.path}: missing rendered code blocks`);
 }
 assert.ok(entries.some(f=>f==='pagefind/pagefind.js'),'Search index not generated');

@@ -1,0 +1,15 @@
+[
+  "install",
+  "quickstart",
+  "choosing-what-to-connect",
+  "addressing-a-connection",
+  "tasks",
+  "output",
+  "authorization",
+  "elicitation",
+  "protocol-eras",
+  "the-daemon",
+  "isolating-untrusted-stdio-servers",
+  "environment-variables",
+  "using-mcpdo-from-a-coding-agent"
+]

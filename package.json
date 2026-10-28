@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node scripts/prepare.mjs && astro dev --host 127.0.0.1",
     "check:translations": "node scripts/validate.mjs",
-    "build": "npm run check:translations && node scripts/prepare.mjs && astro build && pagefind --site dist --glob '{docs/**/*.html,translation-guide/index.html}' && node scripts/check-site.mjs && node scripts/package.mjs",
+    "build": "npm run check:translations && node scripts/prepare.mjs && astro build && pagefind --site dist --glob '{docs/**/*.html,examples/index.html,translation-guide/index.html}' && node scripts/check-site.mjs && node scripts/package.mjs",
     "preview": "astro preview --host 127.0.0.1",
     "deploy": "npm run build && wrangler deploy"
   },

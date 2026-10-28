@@ -1,0 +1,17 @@
+[
+  "choosing-a-server",
+  "methods",
+  "passing-arguments",
+  "output",
+  "probing-mcp-apps",
+  "exit-codes-and-error-envelopes",
+  "authorization-in-scripts",
+  "recipes",
+  "verify-a-server-in-ci",
+  "ci-gates",
+  "branch-on-the-failure-class",
+  "smoke-test-every-tool-that-has-a-ui",
+  "inspect-a-catalog-without-connecting",
+  "editing-the-catalog",
+  "proxies"
+]

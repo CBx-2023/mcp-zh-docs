@@ -1,0 +1,22 @@
+[
+  "debugging-tools-overview",
+  "implementing-logging",
+  "server-side-logging",
+  "common-issues",
+  "working-directory",
+  "environment-variables",
+  "server-startup",
+  "connection-problems",
+  "debugging-in-claude-desktop",
+  "checking-server-status",
+  "viewing-logs",
+  "using-chrome-devtools",
+  "debugging-workflow",
+  "development-cycle",
+  "testing-changes",
+  "best-practices",
+  "logging-strategy",
+  "security-considerations",
+  "getting-help",
+  "next-steps"
+]

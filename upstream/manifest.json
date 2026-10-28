@@ -9,12 +9,28 @@
       "sha256": "9de85c9428d5b0de4ef2ddf712c035989157ead878a92556eab564b2c02770fb"
     },
     {
-      "path": "LICENSE",
-      "sha256": "0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a"
+      "path": "docs/docs/2026-07-28/develop/build-client.mdx",
+      "sha256": "bf9b27094b7567dbc108e0007abc6c10917be71cc1a58847acef1362318bd5e0"
     },
     {
-      "path": "README.md",
-      "sha256": "7e98444c73ed5d923a3b02b1247e9cdf678d31a30cc32b1503bdcd906aa984e2"
+      "path": "docs/docs/2026-07-28/develop/build-server.mdx",
+      "sha256": "426c2d2c4f2500d2fc7c54e84ea4608919aeb31c158932be105fa030ae9da0cd"
+    },
+    {
+      "path": "docs/docs/2026-07-28/develop/build-with-agent-skills.mdx",
+      "sha256": "a04b24bd61146555336e8860510397d558820de6fae3664c1c38ba5e74ace72f"
+    },
+    {
+      "path": "docs/docs/2026-07-28/develop/clients/client-best-practices.mdx",
+      "sha256": "23583eecb59d02e3eeb898b5d51f7ae2dbb996a2d49719bb7e18b772a98f42ce"
+    },
+    {
+      "path": "docs/docs/2026-07-28/develop/connect-local-servers.mdx",
+      "sha256": "622e9205662e4caa2826b0716f8362455aff8a6ac42ef3af4679a1eb7c435ee1"
+    },
+    {
+      "path": "docs/docs/2026-07-28/develop/connect-remote-servers.mdx",
+      "sha256": "4ff17b53440c201a51699dab96cd4faf9d059fed6380ef7ac9fcf6bc592afce3"
     },
     {
       "path": "docs/docs/2026-07-28/getting-started/intro.mdx",
@@ -25,11 +41,96 @@
       "sha256": "4a79af6c1e7e336b5673e2270168357cd704d67ad82fd7d0155f96f75f5a2825"
     },
     {
-      "path": "docs/docs/2026-07-28/develop/build-server.mdx",
-      "sha256": "426c2d2c4f2500d2fc7c54e84ea4608919aeb31c158932be105fa030ae9da0cd"
+      "path": "docs/docs/2026-07-28/learn/client-concepts.mdx",
+      "sha256": "f5ac9e1c719b4b3f8a37bd6dea3c56c3daa1b0beb056c982c75cdd5d4535b134"
+    },
+    {
+      "path": "docs/docs/2026-07-28/learn/server-concepts.mdx",
+      "sha256": "c3d215c0859f180f7225fd5e54d0adf023a37af302ad7d811e16739eff0778e6"
+    },
+    {
+      "path": "docs/docs/2026-07-28/learn/versioning.mdx",
+      "sha256": "dea50f418535fbb7a20d88e10c64e0f42e74814a150ec7dc6a9531582d314ad0"
+    },
+    {
+      "path": "docs/docs/2026-07-28/sdk.mdx",
+      "sha256": "51a36c58965905e6f099a9b59e3e948fe221aacb96c42e5c71ad86582aae1387"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tools/debugging.mdx",
+      "sha256": "d8a8383ce5de0c5ff56c9bd039fddff79946ad75326e43bd5d13031e3267bc45"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tools/inspector.mdx",
+      "sha256": "85b811bb25fc0f7b609a8ee6aa08a3eedb63c867df5d7945875ccfce540b977d"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tools/inspector/authorization.mdx",
+      "sha256": "e56a4712a63b21dca04e3eed7e5db2deb851c4f4bbd606453e836f813a073abb"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tools/inspector/cli.mdx",
+      "sha256": "7f2a018a49a9afe841405b9d53f6dccbab5c18d14fb7a09fe83934922b965003"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tools/inspector/configuration.mdx",
+      "sha256": "71a9b9b180d71d042dcafd47c68033a1709616be58677d2a4c413d54e2faeec0"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tools/inspector/mcpdo.mdx",
+      "sha256": "da25b196c2ea6c4334b071d189e34ed71146640f1e4b51b34a02ba81b0d14074"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tools/inspector/protocol-eras.mdx",
+      "sha256": "c192ab69ef15bf42aa6d3deda780f8b49ce22b597ef11583b72ac0caee98883e"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tools/inspector/recipes.mdx",
+      "sha256": "855578eeed1af5e7742cb48ad8812a5c6df195a8ce17f735d9adb862af7cd7e5"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tools/inspector/security.mdx",
+      "sha256": "fa749d600c3be66536de5574589d8334f0f8c8e9d8f0165e8d087f53108754f7"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tools/inspector/tui.mdx",
+      "sha256": "fc1149c2d3d36f820c2f9d24f749f1b0a340af6568b69b74d1ed3769b2770e81"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tools/inspector/web.mdx",
+      "sha256": "8a31a0d8b35290fb0cd75e7eba64f31ab6eb07f0a7266ad603f979e670a0de87"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tutorials/security/authorization.mdx",
+      "sha256": "efd0f1d1ad6faf2103deb65b006204df0a637c0d40fd7508b12a67cbc09a7d1f"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tutorials/security/local-server-security.mdx",
+      "sha256": "fc32d31ea13da8e87d1875eeea2ff656ca66625cbbf10e13cdfff76fddd01ecd"
+    },
+    {
+      "path": "docs/docs/2026-07-28/tutorials/security/security_best_practices.mdx",
+      "sha256": "0d859ba68bbab6148907ef2bf7b2e169a1b9a2cbe1e8731d7c0d47e15ed37f23"
+    },
+    {
+      "path": "docs/examples.mdx",
+      "sha256": "365972fd678c6dca3075df0eb723449e60459fa65d7e01218edd97434a210bef"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a"
+    },
+    {
+      "path": "README.md",
+      "sha256": "7e98444c73ed5d923a3b02b1247e9cdf678d31a30cc32b1503bdcd906aa984e2"
     }
   ],
   "assets": [
+    {
+      "path": "public/favicon.svg",
+      "sourcePath": "docs/favicon.svg",
+      "sha256": "f6f33e24e95846f9ae2582ab72c4eae7beec5ec52c13d767d9f342bf639dd3e6"
+    },
     {
       "path": "public/images/available-mcp-tools.png",
       "sourcePath": "docs/images/available-mcp-tools.png",
@@ -41,14 +142,254 @@
       "sha256": "c4fbbc2eb6fa09ffc5d21030ecc59f44ed84da232e75a38122c15c19dbd0c108"
     },
     {
+      "path": "public/images/claude-desktop-hamburger-menu-icon.png",
+      "sourcePath": "docs/images/claude-desktop-hamburger-menu-icon.png",
+      "sha256": "2b05511594231b2a94aab683ddca6b5f0c734bfc84e9956d38f0afb90b18fdca"
+    },
+    {
+      "path": "public/images/client-claude-cli-python.png",
+      "sourcePath": "docs/images/client-claude-cli-python.png",
+      "sha256": "24c51ae936cdb4b6f9e410666f7ff3c59da2ee5f9eb8e4f3017d6b18e7118c90"
+    },
+    {
       "path": "public/images/current-weather.png",
       "sourcePath": "docs/images/current-weather.png",
       "sha256": "adeb83519e673f9367b41329aa35485519d53890016d84417c99633a5ca46066"
     },
     {
+      "path": "public/images/inspector/auth-connection-info.png",
+      "sourcePath": "docs/images/inspector/auth-connection-info.png",
+      "sha256": "38127607076fee60d95a08391d7b2fc275ff9c48f26845969b842f698733fec8"
+    },
+    {
+      "path": "public/images/inspector/import-config.png",
+      "sourcePath": "docs/images/inspector/import-config.png",
+      "sha256": "4a9ab2610c30e9f2e7f9bc2672426a496799e958564994198a74df59c5dc4af5"
+    },
+    {
+      "path": "public/images/inspector/logs-legacy.png",
+      "sourcePath": "docs/images/inspector/logs-legacy.png",
+      "sha256": "005b6bf68802552f5dba5788c1c1d96e63cec8545a8f1cf13a116e3cfbf08374"
+    },
+    {
+      "path": "public/images/inspector/logs-modern.png",
+      "sourcePath": "docs/images/inspector/logs-modern.png",
+      "sha256": "9639537b5e69cc3d30a3f0649e941f54f4f13306bd1d60f9e22fa72fb025a3f5"
+    },
+    {
+      "path": "public/images/inspector/mrtr-pending-request.png",
+      "sourcePath": "docs/images/inspector/mrtr-pending-request.png",
+      "sha256": "a34b33551c21c52f09c8903f6cf6f4c7eb86e7bd60ef37bfe67d9821f116ae58"
+    },
+    {
+      "path": "public/images/inspector/mrtr-protocol-conversation.png",
+      "sourcePath": "docs/images/inspector/mrtr-protocol-conversation.png",
+      "sha256": "58268f1b2a6c7931c66d8246c08a13025b2ca1999939c7739a688beca924c6c4"
+    },
+    {
+      "path": "public/images/inspector/network-modern-headers.png",
+      "sourcePath": "docs/images/inspector/network-modern-headers.png",
+      "sha256": "e85e96ffd7b6f8800df12cc66f8f42ee07c1e06aa47a789fae6251747c80744c"
+    },
+    {
+      "path": "public/images/inspector/protocol-modern-error.png",
+      "sourcePath": "docs/images/inspector/protocol-modern-error.png",
+      "sha256": "71e00b4a26426d441d53b455b80213152dcd5a00f1185e9f43947a6a17266df5"
+    },
+    {
+      "path": "public/images/inspector/resources-subscriptions-modern.png",
+      "sourcePath": "docs/images/inspector/resources-subscriptions-modern.png",
+      "sha256": "d6116f0e58dc54fb7909e140e7ee5783aadba507df8cf43e4ddcf9712ada096b"
+    },
+    {
+      "path": "public/images/inspector/settings-protocol-era.png",
+      "sourcePath": "docs/images/inspector/settings-protocol-era.png",
+      "sha256": "c16f4807d6e009a1c2e7cda26f74be6d9e1f4c4e0dc4145d1ed948152394f32a"
+    },
+    {
+      "path": "public/images/inspector/tasks-legacy.png",
+      "sourcePath": "docs/images/inspector/tasks-legacy.png",
+      "sha256": "397503630d1c6f474d64b96f619dbed3d949e062d026b24189462d9516885316"
+    },
+    {
+      "path": "public/images/inspector/tasks-modern.png",
+      "sourcePath": "docs/images/inspector/tasks-modern.png",
+      "sha256": "f72d562ae4a88cfffe8cadf376bd4b800e98c49779a98605f5c9c9d86e8fbca2"
+    },
+    {
+      "path": "public/images/inspector/tools-sep2243.png",
+      "sourcePath": "docs/images/inspector/tools-sep2243.png",
+      "sha256": "94a9367a63c44d36b62eb6a9c96e5538b2be578ac56548bb32e494634a7f61a7"
+    },
+    {
+      "path": "public/images/inspector/tui-auth.png",
+      "sourcePath": "docs/images/inspector/tui-auth.png",
+      "sha256": "17835cc893cf7742de829df7cd0b61fd710dfa5c0029b41bebce5657f446e67c"
+    },
+    {
+      "path": "public/images/inspector/tui-tools.png",
+      "sourcePath": "docs/images/inspector/tui-tools.png",
+      "sha256": "8cd41c842c2fab9a37e4a788b27f9531db38f8f63867e2390b7e7d1d609e1254"
+    },
+    {
+      "path": "public/images/inspector/web-apps.png",
+      "sourcePath": "docs/images/inspector/web-apps.png",
+      "sha256": "2a436610093a2c11e229fd8fa3bc8126dbed715b1b02e694f940a911ba91a04a"
+    },
+    {
+      "path": "public/images/inspector/web-monitor-sidebar.png",
+      "sourcePath": "docs/images/inspector/web-monitor-sidebar.png",
+      "sha256": "e23d546a10705c88bc273f6e2a94bf562ac73844777df0fb4ea1369f8091cafd"
+    },
+    {
+      "path": "public/images/inspector/web-prompts.png",
+      "sourcePath": "docs/images/inspector/web-prompts.png",
+      "sha256": "f1395e4719c303365269e135e59a03c673753270a8587560e4145955de258cb6"
+    },
+    {
+      "path": "public/images/inspector/web-protocol.png",
+      "sourcePath": "docs/images/inspector/web-protocol.png",
+      "sha256": "7abdc6df52d3dc9e28d6d91183507c2adab06971e8ce6d9e72dfd031146973b3"
+    },
+    {
+      "path": "public/images/inspector/web-resources.png",
+      "sourcePath": "docs/images/inspector/web-resources.png",
+      "sha256": "868247257b143b800ee446b41fc7ce45fca31ae0673b4ed4f29ca1712c745078"
+    },
+    {
+      "path": "public/images/inspector/web-server-settings.png",
+      "sourcePath": "docs/images/inspector/web-server-settings.png",
+      "sha256": "74662c86b620e80d89e090ef54c1c208e9eca2d7c1aa8f2da10ef8bbdc2b717e"
+    },
+    {
+      "path": "public/images/inspector/web-tab-bar.png",
+      "sourcePath": "docs/images/inspector/web-tab-bar.png",
+      "sha256": "bca2575c87f38ae79e72a56248a6c762da9376c063dc85f09b09efb5fb0b73d2"
+    },
+    {
+      "path": "public/images/inspector/web-tools.png",
+      "sourcePath": "docs/images/inspector/web-tools.png",
+      "sha256": "8426d6390853b5663bb445df8e0d5dc48435fc02d6885d5b2d294853b4bedae6"
+    },
+    {
       "path": "public/images/mcp-simple-diagram.png",
       "sourcePath": "docs/images/mcp-simple-diagram.png",
       "sha256": "fefd5ea7eeb7289f1d9f00552ce798f2298b1f588a8733a79b9ee4c10512e7c2"
+    },
+    {
+      "path": "public/images/programmatic-tool-calling.svg",
+      "sourcePath": "docs/images/programmatic-tool-calling.svg",
+      "sha256": "d8babc8222d91d518c222039edd5c151a3f8ab93d7f071755d5bd10b1522c1e9"
+    },
+    {
+      "path": "public/images/progressive-discovery.svg",
+      "sourcePath": "docs/images/progressive-discovery.svg",
+      "sha256": "f6f4ea9d27d0b3c73875483cde73fc4ee043e87022839447cee371a8ce5dd9fe"
+    },
+    {
+      "path": "public/images/quickstart-approve.png",
+      "sourcePath": "docs/images/quickstart-approve.png",
+      "sha256": "74a2a93e93830e9ad0208055b48847a0049c04a117ebd8b180dee024524e26b5"
+    },
+    {
+      "path": "public/images/quickstart-developer.png",
+      "sourcePath": "docs/images/quickstart-developer.png",
+      "sha256": "f0980bbe4122fbcfe5ff9dd0a7ea4f616d6e18d26f96e5b4dbac1b8fcf8c5810"
+    },
+    {
+      "path": "public/images/quickstart-dotnet-client.png",
+      "sourcePath": "docs/images/quickstart-dotnet-client.png",
+      "sha256": "25ecbb3e492e7049389cbb29477b6db22431da1db75befe12ef4ec3c3c9b611c"
+    },
+    {
+      "path": "public/images/quickstart-filesystem.png",
+      "sourcePath": "docs/images/quickstart-filesystem.png",
+      "sha256": "5f5c1ae1ce128d59b6170c161ef82c89e324ca2c61109d587139493fb82af60e"
+    },
+    {
+      "path": "public/images/quickstart-menu.png",
+      "sourcePath": "docs/images/quickstart-menu.png",
+      "sha256": "f996e38757ec7c26a74c19c408fc7db7cd36076a6ff2ed4db7179937e2bf2c82"
+    },
+    {
+      "path": "public/images/quickstart-remote/1-add-connector.png",
+      "sourcePath": "docs/images/quickstart-remote/1-add-connector.png",
+      "sha256": "6a3bf5cb95cb4f09705a3a4defc5f8dabccd519ac2cb75129c3b9d546de8604a"
+    },
+    {
+      "path": "public/images/quickstart-remote/2-connect.png",
+      "sourcePath": "docs/images/quickstart-remote/2-connect.png",
+      "sha256": "2a47d9ee0496a16645c853c5765c25a13a587f75971f2ca341657829a46ebc36"
+    },
+    {
+      "path": "public/images/quickstart-remote/3-auth.png",
+      "sourcePath": "docs/images/quickstart-remote/3-auth.png",
+      "sha256": "225bb88ff98a82c31621fa6291d7b9b6415b0c50a5eb210eafd1c75ec62fe938"
+    },
+    {
+      "path": "public/images/quickstart-remote/4-select-resources-menu.png",
+      "sourcePath": "docs/images/quickstart-remote/4-select-resources-menu.png",
+      "sha256": "6183725b1f0b4ed89d5aa9297ac3a60f4d18be5887338b53923d42e3b77c1a64"
+    },
+    {
+      "path": "public/images/quickstart-remote/5-select-prompts-resources.png",
+      "sourcePath": "docs/images/quickstart-remote/5-select-prompts-resources.png",
+      "sha256": "b6470aa7e7595ae76060c0cfa7d4edb69e4fe6ba835ad8e768b02dfe85b11b4e"
+    },
+    {
+      "path": "public/images/quickstart-remote/6-configure-tools.png",
+      "sourcePath": "docs/images/quickstart-remote/6-configure-tools.png",
+      "sha256": "89ed9c2dea8c3decb36976974693c87194d0124cbd8e6402fedb4d8e49c13e04"
+    },
+    {
+      "path": "public/images/quickstart-slider.png",
+      "sourcePath": "docs/images/quickstart-slider.png",
+      "sha256": "3d92719aa2bd9c854d412be0d47d3d10b757ff896161cb7a7ec1821e18e963c6"
+    },
+    {
+      "path": "public/images/quickstart-tools.png",
+      "sourcePath": "docs/images/quickstart-tools.png",
+      "sha256": "80ccdb641cacb34fdf5fde418297826d759933b91be11bb565a35049800de3b3"
+    },
+    {
+      "path": "public/images/tutorial-authorization/keycloak-browser.png",
+      "sourcePath": "docs/images/tutorial-authorization/keycloak-browser.png",
+      "sha256": "a7ac828e9e6b6ca0e1d3b1f5492a59229e3c8b34e861d4e12862600705f7070e"
+    },
+    {
+      "path": "public/images/tutorial-authorization/keycloak-client-auth.gif",
+      "sourcePath": "docs/images/tutorial-authorization/keycloak-client-auth.gif",
+      "sha256": "3b748f007586b03eab7c63fa5a4d79d3a3486ce864f29d8592721c709a2f7617"
+    },
+    {
+      "path": "public/images/tutorial-authorization/keycloak-client.gif",
+      "sourcePath": "docs/images/tutorial-authorization/keycloak-client.gif",
+      "sha256": "858ba6c01124e1d0f02302ba32b151a6be2a60db49707ae8ef64046e92f8bd58"
+    },
+    {
+      "path": "public/images/tutorial-authorization/keycloak-scopes.png",
+      "sourcePath": "docs/images/tutorial-authorization/keycloak-scopes.png",
+      "sha256": "dcf9806914c9ac6c4a72a46ec50d39b1e8d88ec4e3bf50837360f813055b69c9"
+    },
+    {
+      "path": "public/images/tutorial-authorization/keycloak-vscode.png",
+      "sourcePath": "docs/images/tutorial-authorization/keycloak-vscode.png",
+      "sha256": "f46c69e951be6197cfd81aacd53bd3fc3c692883cd1ddef50cb913c7a17b24fa"
+    },
+    {
+      "path": "public/images/tutorial-authorization/scope-add-audience.gif",
+      "sourcePath": "docs/images/tutorial-authorization/scope-add-audience.gif",
+      "sha256": "eca7569745dce237781f263230689312cea35d7bc3fd3f6990babe4af393401c"
+    },
+    {
+      "path": "public/images/tutorial-authorization/tools-vs-code-invoke.png",
+      "sourcePath": "docs/images/tutorial-authorization/tools-vs-code-invoke.png",
+      "sha256": "1cc99a6e5e6b3d8d186522b05fd15ae58f22a67c42ab824ea39ae37de35e54a8"
+    },
+    {
+      "path": "public/images/tutorial-authorization/tools-vs-code.png",
+      "sourcePath": "docs/images/tutorial-authorization/tools-vs-code.png",
+      "sha256": "a334f8a6d52f53d8b7b16a6f651fe7dcd4b21b1640466df4d3c58ba116fc18c8"
     },
     {
       "path": "public/images/visual-indicator-mcp-tools.png",
@@ -69,11 +410,149 @@
       "path": "public/logo/light.svg",
       "sourcePath": "docs/logo/light.svg",
       "sha256": "3163a85f9db4b98c3b5af846ea284b3296295dbd51a138b2e77ebd438342e902"
+    }
+  ],
+  "anchors": [
+    {
+      "path": "upstream/anchors/develop/build-client.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/develop/build-client",
+      "sha256": "db9e3bfbf9bf1faf05c678c9e741fd1f7a8573874bef066011536e6ee554d311"
     },
     {
-      "path": "public/favicon.svg",
-      "sourcePath": "docs/favicon.svg",
-      "sha256": "f6f33e24e95846f9ae2582ab72c4eae7beec5ec52c13d767d9f342bf639dd3e6"
+      "path": "upstream/anchors/develop/build-server.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/develop/build-server",
+      "sha256": "b9c396a6573eda2ce1b7eec1b449aeec5cebfc780f9fc4242929e72d0a5c9fbb"
+    },
+    {
+      "path": "upstream/anchors/develop/build-with-agent-skills.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/develop/build-with-agent-skills",
+      "sha256": "3024f298b35e881780c15cfd21ba2776f3840690263aff068f56dbf5e4a5606c"
+    },
+    {
+      "path": "upstream/anchors/develop/clients/client-best-practices.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/develop/clients/client-best-practices",
+      "sha256": "4be05ba8fe06b3271d1a92ca1406fb1b52d9128a6c261b51a4043ef548a54873"
+    },
+    {
+      "path": "upstream/anchors/develop/connect-local-servers.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/develop/connect-local-servers",
+      "sha256": "e57e858bad7112493f601a969fa50bef9a7cd35e84dd5f9e90219160521305b2"
+    },
+    {
+      "path": "upstream/anchors/develop/connect-remote-servers.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/develop/connect-remote-servers",
+      "sha256": "7ac1f3a3270970c8cf3623916294f3117b955de7f546c5cee6dff967e5aefd89"
+    },
+    {
+      "path": "upstream/anchors/examples.json",
+      "source": "https://modelcontextprotocol.io/examples",
+      "sha256": "db89546add26f7992d4d385ef0142772d313041791a16e6aa750a2ce801d332c"
+    },
+    {
+      "path": "upstream/anchors/getting-started/intro.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro",
+      "sha256": "848850ab9b0afa6fb67f5b3f2d6089539011b4e4f1b7c30f904c5c0f59680167"
+    },
+    {
+      "path": "upstream/anchors/learn/architecture.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/learn/architecture",
+      "sha256": "c43d5372076f2bc2beec06aafd22c1fb89983ccbb6d62373f8041fe2d7dd0e11"
+    },
+    {
+      "path": "upstream/anchors/learn/client-concepts.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/learn/client-concepts",
+      "sha256": "33882ee156ad2fb3af6429d983388eebc90c0a89e0b00fe0367acaf373c63033"
+    },
+    {
+      "path": "upstream/anchors/learn/server-concepts.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/learn/server-concepts",
+      "sha256": "65f97d5d31005b30c315894fd52c156bc646e5cd731ed8172136ddf539f588c3"
+    },
+    {
+      "path": "upstream/anchors/learn/versioning.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/learn/versioning",
+      "sha256": "dc9c8d408ff6bbb62ec3e57cb89d0a917c1b71a83fde063644a6ee248855579e"
+    },
+    {
+      "path": "upstream/anchors/sdk.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/sdk",
+      "sha256": "da45210c74bd54f92f235b697b5a3cc2aaa3f1e0ef122fef5fcfd10c0100c2a2"
+    },
+    {
+      "path": "upstream/anchors/tools/debugging.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tools/debugging",
+      "sha256": "171a0d84b9d13fcafd9fb4ee0db2c5f579707c0fa54a980d723c91fa6bbb7da3"
+    },
+    {
+      "path": "upstream/anchors/tools/inspector.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector",
+      "sha256": "64426eadc1a1f51247c2de36396cda7665b858977c272123b25397c721cdc882"
+    },
+    {
+      "path": "upstream/anchors/tools/inspector/authorization.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/authorization",
+      "sha256": "dd2391490d889fd48df54df589c40a382e85c1942e24c9631dd760bf2f0e3d39"
+    },
+    {
+      "path": "upstream/anchors/tools/inspector/cli.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/cli",
+      "sha256": "3a253d96ea50210543f2582019015a1a43945320e8582c182bc25effdcbe132d"
+    },
+    {
+      "path": "upstream/anchors/tools/inspector/configuration.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/configuration",
+      "sha256": "92983e2b26b1fcc01b94d20051af62a85c6b9a4e023c9aa5992cc9d7afa50065"
+    },
+    {
+      "path": "upstream/anchors/tools/inspector/mcpdo.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/mcpdo",
+      "sha256": "b1cf2bd5048f7b74fb8d077445b62f63f8897fb6a7cbfd41cbf835b8cdf35603"
+    },
+    {
+      "path": "upstream/anchors/tools/inspector/protocol-eras.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/protocol-eras",
+      "sha256": "fab88c3a91ed773755357bec75ef5e1665f7f6b82d902b25a06494eb57dc438d"
+    },
+    {
+      "path": "upstream/anchors/tools/inspector/recipes.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/recipes",
+      "sha256": "0937361b67714cb6bd827d44d8ea6178fc6496e94db23af631e2fdc095cdf594"
+    },
+    {
+      "path": "upstream/anchors/tools/inspector/security.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/security",
+      "sha256": "36d162d04340e3e34f699c9f3ade98e872a7bfdf552ec229b4137659ba6d9131"
+    },
+    {
+      "path": "upstream/anchors/tools/inspector/tui.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/tui",
+      "sha256": "92111cf75320f74a8706527646142c340b894e8dc3961d9c41d61f4074edc238"
+    },
+    {
+      "path": "upstream/anchors/tools/inspector/web.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/web",
+      "sha256": "c35750f7475db9003004be72f1d14733bee75435c208c428b87a3f72bd780129"
+    },
+    {
+      "path": "upstream/anchors/tutorials/security/authorization.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/authorization",
+      "sha256": "bc0227fa37f55e25302c80afbb05bbdadd410a14182a8ecd4472e7cf5ae6845d"
+    },
+    {
+      "path": "upstream/anchors/tutorials/security/local-server-security.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/local-server-security",
+      "sha256": "cb716a6e9838688f7452ad2a8b8022b08e657a9809648f19b7263934cd010828"
+    },
+    {
+      "path": "upstream/anchors/tutorials/security/security_best_practices.json",
+      "source": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices",
+      "sha256": "035682a1ba264a121ca4200a7c4d1b2eba4bd9768a1bf9ae188ff5a804eaad76",
+      "generatedForUnanchoredHeadings": [
+        "normal-oauth-proxy-usage-preserves-user-consent",
+        "malicious-oauth-proxy-usage-skips-user-consent",
+        "consent-flow-implementation",
+        "required-protections"
+      ]
     }
   ]
 }

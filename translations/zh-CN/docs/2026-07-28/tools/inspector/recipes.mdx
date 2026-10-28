@@ -1,0 +1,303 @@
+---
+title: 实践指南
+description: Practical guides for transports, importing configs, reviewing MCP Apps, Docker, network hosting, and persistent connections with mcpdo
+---
+
+## 连接 stdio 与 HTTP 服务器
+
+### stdio
+
+stdio 服务器是由 Inspector 启动的进程。所有位置参数都构成其命令行：
+
+```bash
+mcp-inspector node build/index.js -- --verbose --config /etc/myserver.conf
+```
+
+在准备传给服务器的参数前加上 `--`。没有此分隔符，`--verbose` 会由 Inspector 解析，根本不会传到服务器。
+
+通过 `-e` 为进程设置环境变量，通过 `--cwd` 设置工作目录：
+
+```bash
+mcp-inspector -e API_KEY=abc123 -e REGION=us-east-1 --cwd ~/projects/my-server \
+  node build/index.js
+```
+
+服务器的 `stderr` 会显示在 **Console** 标签页（Web）或 Console 标签页（`o`，TUI）中。大多数 stdio 服务器将诊断信息写到这里，因此连接莫名失败时，应当先查看此处。
+
+### HTTP 与 SSE
+
+```bash
+mcp-inspector --server-url https://api.example.com/mcp --transport http \
+  --header "X-Tenant: acme"
+```
+
+`--transport` 接受 `http`（Streamable HTTP）和 `sse`。如果服务器受保护，请参阅[授权](/docs/2026-07-28/tools/inspector/authorization)：无需预先配置，服务器返回 `401` 时，Inspector 会执行该页所述的 OAuth 流程，然后重试连接。
+
+对于 HTTP 服务器，还需要选择其[协议时代](/docs/2026-07-28/tools/inspector/protocol-eras)。默认值为 `legacy`；在 Server Settings 中设为 `modern` 或 `auto`，或设置 Catalog 文件中的 `protocolEra`，即可测试 2026-07-28 行为。对于临时目标，可以在启动时通过 `--protocol-era legacy|auto|modern` 传入。
+
+## 导入现有客户端配置
+
+Servers 页面中的 **Add Servers** 可以导入你已在其他地方配置好的 MCP Server，无需重新输入。它可以直接解析 Claude Desktop、Cursor、Cline 和 VS Code 的客户端配置，也能读取服务器自己的 [MCP Registry](/registry/about) `server.json`。
+
+导入会合并到当前 [Catalog](/docs/2026-07-28/tools/inspector/configuration#choosing-servers)，即 Inspector 可写的服务器列表。如果导入服务器的 ID 已被占用，可以选择覆盖、跳过或重命名。如果完全不想改动自己的 Catalog，可以改为只读方式使用外部文件启动：
+
+```bash
+mcp-inspector --config ~/Library/Application\ Support/Claude/claude_desktop_config.json
+```
+
+`--config` 保证原样读取文件，绝不写入、初始化或迁移。
+
+<Frame caption="Add Servers 支持从现有客户端配置或 Registry 的 server.json 导入。">
+  <img src="/images/inspector/import-config.png" />
+</Frame>
+
+## 检查 MCP App
+
+[MCP Apps](/extensions/apps/overview) 是携带 UI 小组件的工具。对于自动化检查程序，例如 CI 或智能体，凡是返回 JSON 的检查都应使用 CLI，只有检查渲染后的组件时才打开浏览器。
+
+<Steps>
+  <Step title="不调用工具，先检查安全配置">
+
+```bash
+mcp-inspector --cli --transport http --server-url https://example.com/mcp \
+  --method tools/call --tool-name <tool> --app-info --advertise-apps
+```
+
+`--advertise-apps` 会让 CLI 在 `initialize` 时声明支持 MCP Apps。它默认关闭，因为 CLI 无法渲染应用；但有些服务器只向具备应用能力的客户端展示 App 工具，不开启此参数就会报告没有 App。
+
+stdout 上会输出一行 JSON；工具带有 App 时以 `0` 退出，否则以 `2` 退出，因此 `&&` 命令链可以短路：
+
+```json
+{
+  "hasApp": true,
+  "toolName": "get_pros",
+  "resourceUri": "ui://pros/view.html",
+  "csp": { "connectDomains": ["https://api.example.com"] },
+  "permissions": { "clipboard": false },
+  "prefersBorder": true,
+  "resourceMimeType": "text/html"
+}
+```
+
+`csp` 和 `permissions`，以及资源声明了域名时的 `domain`，属于 UI **资源**而非工具，因此 `--app-info` 会读取该资源，但绝不会调用工具。
+
+  </Step>
+  <Step title="仍不使用浏览器，获取完整结果载荷">
+
+```bash
+mcp-inspector --cli --transport http --server-url https://example.com/mcp \
+  --method tools/call --tool-name <tool> --tool-args-json '{"zip":"10001"}' --format json
+```
+
+  </Step>
+  <Step title="启动一次 Web Inspector，仅绑定回环地址">
+
+```bash
+TOKEN="$(openssl rand -hex 24)"
+HOST=127.0.0.1 CLIENT_PORT=6274 MCP_SANDBOX_PORT=6275 \
+MCP_AUTO_OPEN_ENABLED=false MCP_INSPECTOR_API_TOKEN="$TOKEN" \
+mcp-inspector --web &
+```
+
+固定 `MCP_SANDBOX_PORT` 可以明确地址：应用 UI 由独立沙箱端口提供，自动化程序需要知道它在哪里。
+
+  </Step>
+  <Step title="通过一个深链接进入已渲染的组件">
+
+```
+http://127.0.0.1:6274/?serverUrl=<encoded url>&transport=http&autoConnect=<TOKEN>&openApp=<tool>&appArgs=<base64url(JSON)>&autoOpen=<TOKEN>
+```
+
+`appArgs` 是经过 base64url 编码的 JSON 格式工具参数；所有深链接参数的说明见[深链接](/docs/2026-07-28/tools/inspector/web#deep-links)。`autoConnect` 和 `autoOpen` 都必须等于会话 Token，因为 `autoOpen` 会直接通过 URL 触发工具调用，需要与 `autoConnect` 相同的保护。
+
+  </Step>
+  <Step title="等待确定性信号，而不是固定休眠">
+
+Apps 页面为自动化提供了稳定约定。请轮询以下属性，而不是固定休眠：
+
+| 选择器 | 属性 | 值 |
+| ----------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------- |
+| `[data-testid="apps-form"]` | `data-app-status` | `idle`，然后为 `loading`，最后为 `ready` 或 `error`；为 `error` 时，`data-app-error` 包含原因 |
+| `[data-testid="connection-status"]` | `data-status` | `disconnected`、`connecting`，然后为 `connected` 或 `error`；`data-error-message` 包含详情 |
+| `[data-testid="connection-status"]` | `data-deeplink` | `parsed`、`rejected` 或 `none`；`none` 表示未提供深链接，`rejected` 表示深链接被拒绝 |
+
+  </Step>
+</Steps>
+
+## Docker
+
+GitHub Container Registry 发布了适用于 `linux/amd64` 和 `linux/arm64` 的容器镜像：
+
+```bash
+docker run --rm -p 127.0.0.1:6274:6274 ghcr.io/modelcontextprotocol/inspector
+```
+
+从容器日志中读取[会话 Token](/docs/2026-07-28/tools/inspector/web#the-session-token)，或使用 `-e MCP_INSPECTOR_API_TOKEN=<value>` 固定其值。
+
+镜像默认使用 `--web`，绑定 `0.0.0.0:6274`，关闭浏览器自动打开，并以非 root 的 `node` 用户（UID `1000`）运行。它设置了 `DANGEROUSLY_BIND_ALL_INTERFACES=true`，因为容器必须绑定通配地址，才能通过 `-p` 访问。
+
+<Warning>
+  **每个发布的端口都要保留 `127.0.0.1:` 前缀。** 单独的 `-p
+  6274:6274` 会在主机所有网络接口上发布端口，将能够启动进程的后端及披露其 Token 的页面暴露到局域网。镜像中的 `DANGEROUSLY_BIND_ALL_INTERFACES` 作用于容器的网络接口，而不是主机。见[仅在回环地址发布端口](/docs/2026-07-28/tools/inspector/security#publish-the-port-on-loopback-only)。
+</Warning>
+
+要使用 **Apps** 标签页，还需发布 MCP Apps 沙箱端口 `6275`；对于声明了 `_meta.ui.domain` 的 App，还需发布 `6278`。每个端口在容器内外都应使用相同端口号，因为传给浏览器的是容器内端口：
+
+```bash
+docker run --rm -p 127.0.0.1:6274:6274 -p 127.0.0.1:6275:6275 \
+  ghcr.io/modelcontextprotocol/inspector
+```
+
+### 保留服务器与密钥
+
+服务器列表、OAuth 状态和密钥位于容器可写层的 `/home/node/.mcp-inspector` 下，因此 `--rm` 会丢弃它们，每次运行都从空状态开始。在该位置挂载卷即可保留：
+
+```bash
+docker run --rm -p 127.0.0.1:6274:6274 \
+  -v mcp-inspector-data:/home/node/.mcp-inspector \
+  ghcr.io/modelcontextprotocol/inspector
+```
+
+容器没有操作系统钥匙串，因此密钥保存在哪里取决于该卷：
+
+| 情况 | 密钥存储 | 重启后保留？ |
+| -------------------------------------------- | ----------------------------------------- | ------------------- |
+| `/home/node/.mcp-inspector` 上**没有挂载卷** | 内存 | 否，仅限本次会话 |
+| **挂载了**该卷 | 卷上的 `secrets.json`，权限为 `0600` | 是 |
+
+如果绑定挂载主机目录，而非使用命名卷，目录会保留主机上的所有者。因此在 Linux 上，应添加 `--user "$(id -u):$(id -g)"`，或用 `chown` 将所有者改为 UID `1000`，否则保存会以 `EACCES` 失败。不要只绑定挂载密钥文件本身：它不会被识别为持久存储，也无法进行原子替换。
+
+<Warning>
+**挂载该卷会启用密钥的文件存储；没有密钥时，文件以明文保存。** 所有获得的 OAuth Token，以及保存的每个客户端密钥和 stdio `env:` 值，都会写入卷上的 `secrets.json`。root、主机 `docker` 组的每位成员，以及任何拿到该卷备份、快照或副本的人，都可以读取它。
+
+请提供一个密钥，将其生成到只有你能读取的文件中，并放在该卷、其备份及任何仓库之外：
+
+```bash
+mkdir -p ~/.config/mcp-inspector
+(umask 077 && openssl rand -base64 32 > ~/.config/mcp-inspector/secret-key)
+```
+
+即使经过加密，磁盘上的密钥仍有中等风险。参阅[文件存储能防范什么](/docs/2026-07-28/tools/inspector/security#what-the-file-store-protects-against)。
+
+</Warning>
+
+通过 `MCP_INSPECTOR_SECRET_KEY_FILE`，将密钥**作为文件**交给容器，而不是作为环境变量。使用 `-e MCP_INSPECTOR_SECRET_KEY=…` 传入的密钥，任何可以运行 `docker inspect` 或 `docker exec` 的人都能读取。
+
+<Tabs>
+  <Tab title="docker run">
+
+```bash
+docker run --rm -p 127.0.0.1:6274:6274 \
+  -v mcp-inspector-data:/home/node/.mcp-inspector \
+  -v "$HOME/.config/mcp-inspector/secret-key:/run/secrets/mcp_inspector_secret_key:ro" \
+  -e MCP_INSPECTOR_SECRET_KEY_FILE=/run/secrets/mcp_inspector_secret_key \
+  ghcr.io/modelcontextprotocol/inspector
+```
+
+  </Tab>
+  <Tab title="Compose secrets">
+
+```yaml
+services:
+  inspector:
+    image: ghcr.io/modelcontextprotocol/inspector
+    ports: ["127.0.0.1:6274:6274"]
+    volumes: ["mcp-inspector-data:/home/node/.mcp-inspector"]
+    environment:
+      MCP_INSPECTOR_SECRET_KEY_FILE: /run/secrets/mcp_inspector_secret_key
+    secrets: [mcp_inspector_secret_key]
+secrets:
+  mcp_inspector_secret_key:
+    file: ${HOME}/.config/mcp-inspector/secret-key
+volumes:
+  mcp-inspector-data:
+```
+
+  </Tab>
+</Tabs>
+
+不使用 Swarm 时，Compose secrets 是保留主机文件所有者和权限的绑定挂载，因此权限为 `0600` 的密钥文件必须属于 UID `1000`。如果 Linux 主机上你的 UID 不同，请运行 `sudo chown 1000 ~/.config/mcp-inspector/secret-key`，而不是放宽权限。每次运行都要提供**相同**密钥。
+
+如果加密密钥文件不存在、不可读、为空，或两个密钥变量同时设置，Inspector 会**拒绝读写凭据存储文件**，而不是回退到明文，并在日志及设置对话框页脚中说明原因。存储的其他细节，包括选择顺序、位置和权限，见[密钥存储位置](/docs/2026-07-28/tools/inspector/configuration#where-secrets-are-stored)。
+
+### 健康检查与其他模式
+
+镜像的 `HEALTHCHECK` 会在 `HOST` 绑定的地址探测 Web UI。`--cli` 和 `--tui` 没有 Web 服务器，因此探测器会从容器参数中识别这些模式，并在它们运行时报告健康。外部编排器，例如 Kubernetes 探针或 Compose 的 `healthcheck`，可以在 Web 端口调用 `GET /healthz`，该端点不需要 Token，只返回 `{"status":"ok"}`。
+
+下方的 `<target>` 是一个[临时目标](/docs/2026-07-28/tools/inspector/configuration#ad-hoc-targets)：位置参数形式的 stdio 命令，或 `--server-url <url> --transport http`。
+
+```bash
+docker run --rm ghcr.io/modelcontextprotocol/inspector --cli <target> --method tools/list
+```
+
+<Warning>
+  **重映射发布端口时，请设置 `ALLOWED_ORIGINS`。** 使用 `-p
+  127.0.0.1:8080:6274` 后，浏览器来源变为 `http://localhost:8080`，不再匹配容器内端口，连接就会收到 `403`。可以运行 `-e CLIENT_PORT=8080 -p 127.0.0.1:8080:8080`，或设置 `-e
+  ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080`。
+</Warning>
+
+## 在网络上提供访问
+
+Inspector 默认绑定 `127.0.0.1`，其后端能够启动进程，因此应把对网络开放视为一项需要明确作出的决定。
+
+除非设置 `DANGEROUSLY_BIND_ALL_INTERFACES=true`，否则 Inspector 拒绝绑定**通配的**全接口地址，包括 `0.0.0.0`、`::` 和所有等价写法。绑定某个**特定**地址则无需额外启用，因为这只明确暴露一个地址，而不是一次暴露 DNS 重绑定攻击所针对的全部网络接口。
+
+| 目标 | 做法 |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **从局域网中的另一台机器访问** | 设置 `HOST=192.168.1.50`。默认来源允许列表会跟随绑定主机，因此无需其他配置即可接受 `http://192.168.1.50:6274`。 |
+| **位于 TLS 或反向代理后** | 浏览器的 `Origin` 会变成公开来源，与绑定主机不匹配。设置 `ALLOWED_ORIGINS=https://inspector.example.com`；对于 MCP Apps，还需设置 `MCP_SANDBOX_FULL_ADDRESS`，见下文。 |
+| **通配绑定（容器）** | 设置 `DANGEROUSLY_BIND_ALL_INTERFACES=true`。回环访问仍然开箱即用；通过非回环地址访问则需要 `ALLOWED_ORIGINS`。 |
+
+<Warning>
+`ALLOWED_ORIGINS` 会**替换**默认列表，而不是与之合并。列出你会使用的所有浏览器来源，包括想保留的回环形式：
+
+```
+ALLOWED_ORIGINS=http://localhost:6274,http://127.0.0.1:6274,http://192.168.1.50:6274
+```
+
+每个条目都必须包含协议方案；不含方案的值会被丢弃并产生警告。空白值**不会**关闭检查，而是回退到默认值。没有开关可以关闭来源校验。
+
+</Warning>
+
+离开回环访问范围时，还需注意以下事项：
+
+- **MCP Apps 的沙箱端口也必须可达。** 它使用独立监听器，默认 `6275`，由 `MCP_SANDBOX_PORT` 设置，因此要与 Web 端口一起暴露或转发。
+- **在 TLS 或反向代理后，请为 MCP Apps 提供公开地址。** 默认公开的沙箱地址是 `http://<bind host>:6275`，会被 `https://` 页面作为混合内容拦截。设置 `MCP_SANDBOX_FULL_ADDRESS`，例如 `https://inspector-sandbox.example.com/sandbox`；对于声明 `_meta.ui.domain` 的 App，还要设置 `MCP_APP_ORIGIN_FULL_ADDRESS`，例如 `https://inspector-apps.example.com`。它们各自需要独立的主机名或端口；与 Inspector 共用来源的地址会被拒绝。
+- **MCP Apps 无法在纯 IPv6 字面地址上渲染。** 方括号中的 IPv6 字面地址不是有效的 CSP host-source，因此应使用域名或 IPv4 地址访问。
+
+无论采用哪种方式，都要保持身份验证开启。对于任何除你之外其他人可访问的实例，不要设置 `DANGEROUSLY_OMIT_AUTH`。原因见[安全](/docs/2026-07-28/tools/inspector/security#the-web-backend-and-its-api-token)。
+
+## 使用 mcpdo 保持连接
+
+当探索需要多次调用时，例如同一会话上的多步流程、持续查看日志，或智能体在会话中使用服务器工具，为每次 `--cli` 调用重新连接会妨碍操作。[mcpdo](/docs/2026-07-28/tools/inspector/mcpdo) 可以替你保持连接：
+
+```bash
+mcpdo connect my-server
+mcpdo @my-server tools/call --task start_job size:=large   # task-augmented; blocks until the task finishes
+mcpdo @my-server tools/call get_job_report
+mcpdo @my-server logging/tail          # long-lived; Ctrl-C to stop
+mcpdo disconnect my-server
+```
+
+每条连接同一时刻执行一个调用，因此其他 Shell 中针对同一连接的命令会排队等待。
+
+持有连接的守护进程会自动启动，并在最后一条连接关闭约一分钟后退出。在共享机器上使用前，请阅读 [mcpdo 连接守护进程](/docs/2026-07-28/tools/inspector/security#the-mcpdo-connection-daemon)。
+
+## 开发工作流
+
+以下循环在实践中很有效：
+
+<Steps>
+  <Step title="从 CLI 开始">
+    `--method initialize` 可以在一秒内确认服务器能否启动、握手并报告预期能力，并返回机器可读的答案。多数“无法工作”的问题都出在这里。
+  </Step>
+  <Step title="转到 Web 客户端进行探索">
+    由 Schema 驱动的表单、渲染后的结果，以及旁边的 Protocol 标签页，可以帮助你快速找到工具表现异常的场景。
+  </Step>
+  <Step title="测试边界情况">
+    测试无效输入、缺失必填提示模板参数、并发调用，以及 HTTP 服务器的两个协议时代。确认 *错误* 和成功一样，都是有意设计的结果。
+  </Step>
+  <Step title="用 CLI 固化结果">
+    将发现转成 CI 断言：使用 `--stored-auth-only`，将 CLI 的 `--format json` 输出通过管道传给 `jq -e`，让缺少 Token 时立即失败，而不是启动交互式 OAuth。完整命令见[在 CI 中验证服务器](/docs/2026-07-28/tools/inspector/cli#verify-a-server-in-ci)。
+  </Step>
+</Steps>

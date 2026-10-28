@@ -12,10 +12,11 @@ export function remarkCompatibility() {
   return (tree,file) => {
     const filePath = file.path.replaceAll('\\','/');
     if(!filePath.includes('/src/content/docs/'))return;
-    const match = filePath.match(/src\/content\/docs\/(docs\/[^.]+)\.mdx$/);
+    const match = filePath.match(/src\/content\/docs\/([^.]+)\.mdx$/);
     const route = match?.[1];
     const headings = route?JSON.parse(readFileSync(path.join(root,'src/generated/headings.json'),'utf8'))[route]:null;
     let headingIndex = 0;
+    let accordionIndex = 0;
     visit(tree,'heading', node => {
       if(!headings)return;
       const original = headings[headingIndex++];
@@ -25,8 +26,14 @@ export function remarkCompatibility() {
       node.data.hProperties.id = original;
     });
     visit(tree,node=>{
-      if(node.type==='link' && node.url.startsWith('.')&&route) node.url = path.posix.resolve('/',path.posix.dirname(route),node.url);
-      if(node.type==='link' && node.url.startsWith('/')&&!node.url.startsWith('/mcp-zh-docs/'))node.url='/mcp-zh-docs'+node.url;
+      // The upstream local-server guide links to an older wording of this accordion title.
+      // Keep the original href and provide its historical anchor only in the rendered site.
+      if(node.type==='mdxJsxFlowElement'&&node.name==='Accordion'){
+        if(route==='docs/2026-07-28/develop/connect-local-servers'&&accordionIndex===1)node.attributes.push(attribute('id','getting-logs-from-claude-for-desktop'));
+        accordionIndex++;
+      }
+      if(['link','image'].includes(node.type) && node.url.startsWith('.')&&route) node.url = path.posix.resolve('/',path.posix.dirname(route),node.url);
+      if(['link','image'].includes(node.type) && node.url.startsWith('/')&&!node.url.startsWith('/mcp-zh-docs/'))node.url='/mcp-zh-docs'+node.url;
       for(const attr of node.attributes??[])if(['href','src'].includes(attr.name)&&typeof attr.value==='string'&&attr.value.startsWith('/')&&!attr.value.startsWith('/mcp-zh-docs/'))attr.value='/mcp-zh-docs'+attr.value;
       if(node.type==='mdxJsxFlowElement' && node.name==='CodeGroup') {
         node.name='Tabs';

@@ -20,7 +20,7 @@ for(const page of site.pages) {
   // Framework metadata lives only in generated copies. Translation frontmatter stays intact.
   const generatedMeta = { title:meta.title, description:page.description, sidebar:{label:page.label}, tableOfContents:page.path.endsWith('build-server')?{maxHeadingLevel:2}:true, editUrl:`${site.repository}/edit/main/${translatedPath(page)}` };
   const body = zh.slice(frontmatter.position.end.offset).trimStart();
-  const imports = `import { Card, CardGroup, Frame, Note, Warning, Tip, Steps, Step, Tabs, Tab, Accordion, AccordionGroup, Tooltip, Mermaid } from '/src/components/compat';\n\n`;
+  const imports = `import { Card, CardGroup, Frame, Note, Warning, Tip, Steps, Step, Tabs, Tab, Accordion, AccordionGroup, Tooltip, Mermaid, Info, Icon, Badge } from '/src/components/compat';\n\n`;
   const result=`---\n${dump(generatedMeta,{lineWidth:-1})}---\n\n${imports}${body}`;
   const target=`src/content/docs/${page.path}.mdx`;
   await mkdir(path.dirname(target),{recursive:true});

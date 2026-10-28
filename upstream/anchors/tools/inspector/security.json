@@ -1,0 +1,17 @@
+[
+  "the-web-backend-and-its-api-token",
+  "where-the-backend-listens",
+  "docker",
+  "publish-the-port-on-loopback-only",
+  "the-data-volume-puts-secrets-on-disk",
+  "secret-storage",
+  "the-automatic-plaintext-fallback",
+  "what-the-file-store-protects-against",
+  "stdio-servers-run-as-you",
+  "the-mcpdo-connection-daemon",
+  "how-clients-reach-it-and-who-else-can",
+  "how-it-authenticates-commands",
+  "what-it-holds-in-memory",
+  "lifetime",
+  "what-it-writes-to-disk"
+]

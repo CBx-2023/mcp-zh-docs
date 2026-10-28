@@ -1,0 +1,15 @@
+[
+  "what-a-local-server-can-touch",
+  "the-stdio-trust-model",
+  "threats-this-guide-addresses",
+  "ask-whether-it-needs-to-run-locally",
+  "check-provenance-before-you-install",
+  "treat-tool-definitions-as-untrusted-input",
+  "run-servers-in-an-isolated-environment",
+  "isolate-credentials",
+  "limit-filesystem-access",
+  "control-network-egress",
+  "managing-local-servers-across-an-organization",
+  "checklist",
+  "next-steps"
+]

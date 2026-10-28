@@ -4,13 +4,9 @@ MCP `2026-07-28` 官方学习文档的非官方简体中文译本。使用 Astro
 
 在线预览：https://docs.starlandai.com/mcp-zh-docs/
 
-首期提供三篇完整样稿：
+已完成该版本 Documentation 全部 26 篇及共享 Examples 页面，共 27 篇完整译文，覆盖概念、客户端／服务器开发、安全与 Inspector 全套文档。构建教程包含 Python、TypeScript、Java、Kotlin、C#、Ruby、Rust、Go 示例。
 
-- 什么是 MCP？
-- 架构概览
-- 构建 MCP Server（Python、TypeScript、Java、Kotlin、C#、Ruby、Rust、Go）
-
-其余文档链接会跳转到官方对应的英文页面。网站不代表 MCP 官方。
+Specification、Extensions、Registry、SEPs 和 Community 属于本次翻译范围之外，保留通往官方英文内容的链接。网站不代表 MCP 官方。
 
 ## 本地开发
 
@@ -51,7 +47,7 @@ wrangler.jsonc            Cloudflare 静态站点部署配置
 - 所有代码块逐字保留，包括注释、字符串、语言标记和 Mermaid；行内代码同样保留。
 - Frontmatter 仅可翻译 `title` 的值。`sidebarTitle`、`description` 等字段保持原样。
 - 保留链接目标、图片路径、锚点、节点标记、组件和表达式。
-- 只翻译自然语言及组件中明确可见的 `title`、`tip`、`alt`、`aria-label` 等文字。
+- 只翻译自然语言及组件中明确可见的 `title`、`tip`、`alt`、`aria-label`、`caption` 等文字。
 - 不擅自修正上游示例。新增说明与译文正文分开。
 
 ### 构建适配
@@ -67,7 +63,7 @@ npm run check:translations
 npm run build
 ```
 
-校验覆盖源码快照哈希、MDX 结构、逐字代码、行内代码、链接目标、Frontmatter 和显式节点标记。中文语序允许在同一段落内调整行内元素位置。英文候选文本会输出到报告，供人工确认专有名称或漏译。
+校验覆盖源码快照哈希、MDX 结构、逐字代码、行内代码、链接目标、Frontmatter 和显式节点标记。中文语序允许在同一段落或表格单元格内调整行内元素位置。英文候选文本会输出到报告，供复核专有名称或漏译。全量 27 篇共有 359 个代码块、1,865 处行内代码和 408 个 Markdown 链接。
 
 构建检查覆盖全部生成页面的站内链接、锚点、图片、重复 ID 和官方回退路由。代码保真检查不等于执行验证；八种语言的示例未逐一运行。
 

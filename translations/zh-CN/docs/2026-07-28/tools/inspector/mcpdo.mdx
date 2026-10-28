@@ -1,0 +1,173 @@
+---
+title: mcpdo 连接客户端
+description: Connect to an MCP server once, then run many commands against that named connection
+---
+
+`mcpdo` 是一个**实验性**命令行客户端，与 `mcp-inspector` 一同包含在 `@modelcontextprotocol/inspector` 软件包中。[CLI 客户端](/docs/2026-07-28/tools/inspector/cli) 每次连接后运行一个 `--method`，随即断开；`mcpdo` 则**只连接一次**并保持连接，让你可以从任意 Shell 针对它运行多条命令，类似于 `ssh-agent` 持续保留已加载的密钥。
+
+|               | `mcp-inspector --cli`                | `mcpdo`                                                                                                   |
+| ------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| **生命周期** | 连接，运行一个 `--method`，断开连接  | 连接一次，运行多条命令                                                                               |
+| **状态**     | 不同运行之间不保留状态                    | 由守护进程持有具名连接                                                                        |
+| **适用场景**  | CI 断言，每次运行输出一个 JSON 数据块 | 探索服务器、智能体使用工具，以及在一个会话内完成多步流程（任务、订阅、信息征询） |
+
+连接由本地后台守护进程 `mcpdod` 持有，`mcpdo` 会按需启动它，并在最后一个连接关闭后停止它。无需手动启动。它暴露哪些能力，以及如何受保护，详见 [mcpdo 连接守护进程](/docs/2026-07-28/tools/inspector/security#the-mcpdo-connection-daemon)。
+
+观看 [mcpdo 教程视频](https://www.youtube.com/watch?v=_a6eG0y156k)。
+
+## 安装
+
+`mcpdo` 是同一软件包中的第二个可执行程序，因此可以全局安装该软件包，或通过 `npx -p` 运行：
+
+```bash
+npm install -g @modelcontextprotocol/inspector
+mcpdo --help
+
+# or without installing
+npx -p @modelcontextprotocol/inspector mcpdo --help
+```
+
+## 快速入门
+
+```bash
+mcpdo servers/list                            # catalog entries you can connect
+mcpdo connect my-server                       # connect a catalog entry
+mcpdo @my-server tools/list
+mcpdo @my-server tools/call echo message:=hi
+mcpdo @my-server resources/read file:///tmp/notes.txt
+mcpdo connections/list                        # what's open
+mcpdo disconnect my-server
+```
+
+`mcpdo help` 或 `mcpdo <command> --help` 会输出完整且权威的命令与参数列表。
+
+## 选择连接目标
+
+`connect` 接受 Catalog 条目名称或临时目标：
+
+```bash
+mcpdo connect my-server                        # from the default catalog
+mcpdo connect my-server --config ./mcp.json    # from a read-only config file
+mcpdo connect https://example.com/mcp          # ad-hoc HTTP/SSE server
+mcpdo connect node build/index.js              # ad-hoc stdio server
+```
+
+Catalog 和 `--config` 的行为与其他客户端完全一致（见[配置与参数](/docs/2026-07-28/tools/inspector/configuration#choosing-servers)）：默认 Catalog 为 `~/.mcp-inspector/mcp.json`，可以通过 `--catalog` 或 `MCP_CATALOG_PATH` 覆盖。`servers/list` 和 `servers/show <name>` 从磁盘读取条目。`connections/*` 显示守护进程当前持有的连接。没有编辑 Catalog 的命令；请直接编辑文件。
+
+stdio 服务器使用的是运行 `connect` 的 Shell 的工作目录和命令解析方式，而不是守护进程的，因此相对路径和不带路径的命令名称会按你的预期解释。
+
+## 指定连接
+
+Catalog 连接使用条目名称命名。临时连接默认以第一个词元（`node`、`docker` 或 URL 本身）命名，除非你在连接时通过 `@name` 显式命名：
+
+```bash
+mcpdo connect @api https://example.com/mcp
+```
+
+在每条命令中使用 `@name`，或 `--connection <name>`（简写为 `--conn`）指定连接。以 URL 命名的连接只能通过 `--conn <url>` 指定，因为 `@name` 只接受字母、数字、`_`、`.` 和 `-`：
+
+```bash
+mcpdo @my-server tools/list
+mcpdo --conn my-server tools/list
+```
+
+省略名称时，仅在交互式 TTY 中才会回退到最近使用的连接。脚本或智能体的 stdin 不是 TTY，此时不带限定名称的命令会报错，避免后台作业误操作你最后使用的服务器。如果仍要允许这种回退，可以设置 `MCP_ALLOW_DEFAULT_CONNECTION=1`。
+
+连接具有**自愈能力**：传输中断（例如 HTTP 会话过期，或 stdio 子进程退出）后，下次使用时会利用已存凭据透明地重新连接。只有出现 `auth_required` 错误时，才需要再次运行 `connect`。
+
+每个连接**一次只执行一个调用**。其他 Shell 针对同一连接发出的命令，会排在当前调用之后；如果某个调用因[信息征询](#elicitation)而暂停，连接会拒绝新的调用，直到问题得到回答。耗时调用不会阻塞其他连接。
+
+## 任务
+
+如果工具要求任务支持，普通的 `tools/call` 会被拒绝；添加 `--task` 即可发起带任务支持的调用。该命令仍会**阻塞**到任务完成，然后输出最终结果：
+
+```bash
+mcpdo @my-server tools/call --task start_job size:=large
+```
+
+如果任务进入 `input_required` 状态，其问题会按照普通的[信息征询](#elicitation)处理。
+
+## 输出
+
+| 参数                      | 输出                                                                             |
+| ------------------------- | ---------------------------------------------------------------------------------- |
+| `--format text`（默认） | 便于人类阅读；在 TTY 中带 ANSI 样式，除非设置了 `--plain` 或 `NO_COLOR`。  |
+| `--format json`           | 美化格式后的原始载荷，不包含 `{ result }` 包装，适用于脚本和智能体。 |
+
+全局参数包括 `--format`、`--plain`、`--connection` / `--conn`、`--catalog` / `--config` 和 `--stored-auth-only`。它们可以放在子命令之前或之后，但必须位于任何 `--` 之前。`@name` 简写必须放在子命令之前。
+
+发送到终端的文本（结果、信息征询提示、守护进程错误）会去除控制字符，防止服务器改写你的终端。`--format json` 则保持原样。
+
+## 授权
+
+`mcpdo` 与其他 Inspector 客户端共享 `oauth.json` 和密钥存储，因此，在其他客户端中已经授权的服务器可以直接连接，无需再次提示。OAuth 在**连接时**执行。会话期间的权限提升由一次性 CLI 处理，而非 `mcpdo`。
+
+| 命令                                                        | 效果                                                                                                                                   |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `mcpdo connect <name> --relogin`（`-r`）                        | 连接前清除该服务器已存储的 Token（仅限 HTTP/SSE）；若服务器要求授权，则重新登录。                   |
+| `mcpdo disconnect <name> --clear-auth`（`-c`）                  | 关闭连接，**同时**清除已存储的 Token，使下次 `connect` 重新登录。                                              |
+| `mcpdo auth/list`                                              | 列出已存凭据，标注 Catalog 或连接中对应的名称；如果打开的连接正在使用该凭据，还会标记 `● live`。 |
+| `mcpdo auth/clear <url-or-name>`                               | 按存储 URL 或友好名称清除一项已存凭据；使用 `--all --yes` 清除全部。                                              |
+| `mcpdo auth/ema-login` / `auth/ema-status` / `auth/ema-logout` | 企业管理授权：向 IdP 登录一次，此后即可静默连接 EMA 服务器。                                         |
+
+需要浏览器登录时，如果 stdin 和 stderr 都不是 TTY（并且没有强制启用 `MCP_AUTO_OPEN_ENABLED`），`connect` 会立即以退出码 `0` 返回，并提供 `pendingAuth: true` 和 `authUrl`。请将该 URL 转交给实际登录的人。登录完成后，连接会自行完成：对该连接执行的下一条实际命令会完成连接流程，在此之前 `connections/list` 会报告 `pendingAuthSignedIn`。不要为了处理待完成的登录而重新连接。
+
+在没有操作系统钥匙串的主机上，`mcpdo` 会将 Token 存入共享的 `secrets.json` 文件，绝不会仅存于内存，因为命令和守护进程是不同的进程。除非你提供密钥，否则该文件为明文；详见[密钥信息存储在哪里](/docs/2026-07-28/tools/inspector/configuration#where-secrets-are-stored)。
+
+## 信息征询
+
+当服务器在调用期间提出问题（旧版的 `elicitation/create`、现代协议的 MRTR 轮次，或进入 `input_required` 的任务）时：
+
+- **在交互式 TTY 中**，`mcpdo` 会内联提示。表单模式为每个字段呈现一个输入提示，并提供复核步骤。URL 模式输出 URL，然后等待你确认已完成操作。
+- **在脚本或智能体中**（使用 `--format json`，或没有 TTY），命令返回 `elicitationPending` 和 `elicitationId`，调用则在守护进程上保持**暂停**。可以从任意 Shell 回答：
+
+```bash
+mcpdo elicitation/respond <elicitationId> approved:=true   # form fields as key:=value or JSON
+mcpdo elicitation/respond <elicitationId> --done           # URL mode: I finished
+mcpdo elicitation/respond <elicitationId> --decline        # form mode only
+mcpdo elicitation/respond <elicitationId> --cancel         # either mode
+```
+
+暂停的信息征询会在 10 分钟后取消；每个连接同一时间只能保留一个。回答之前，该连接会拒绝其他调用。URL 模式绝不会被自动接受。如果要完全禁止服务器提问，请在连接时使用 `--elicit off`。`--elicit url`、`form` 或 `both`（默认）用于选择声明支持哪些模式。
+
+## 协议时代
+
+`mcpdo` 与其他客户端协商相同的[协议时代](/docs/2026-07-28/tools/inspector/protocol-eras)。`connect --era legacy|auto|modern` 会覆盖 Catalog 条目的 `protocolEra`，也是为临时目标设置协议时代的唯一方式。`connections/list` 使用 `[legacy]` 或 `[modern]` 标记每个连接；`connections/show <name>` 则提供协商后的版本、服务器信息和能力，以及探测服务器后得到的支持版本列表。
+
+## 守护进程
+
+| 命令                   | 效果                                                               |
+| ------------------------- | -------------------------------------------------------------------- |
+| `mcpdo daemon status`     | 显示是否有守护进程正在运行，以及它的连接和空闲倒计时。 |
+| `mcpdo daemon stop`       | 关闭全部连接并停止守护进程。                          |
+| `eval "$(mcpdo private)"` | 为当前 Shell 创建独立的守护进程与连接。                      |
+
+默认情况下，运行 `mcpdo` 的所有 Shell 共享一个守护进程，因此在一个终端中打开的连接也能在另一个终端中使用。`mcpdo private` 会导出 `MCP_INSPECTOR_DAEMON_DIR` 和 `MCP_INSPECTOR_DAEMON_TOKEN`，使当前 Shell 使用独立的守护进程。这样可以隔开连接，但无法构成针对以同一用户身份运行的其他进程的安全边界。
+
+最后一个连接关闭约一分钟后，守护进程会退出。在软件包升级之前启动的守护进程，在退出前仍会运行旧代码，因此升级后请运行 `mcpdo daemon stop`。
+
+## 隔离不受信任的 stdio 服务器
+
+守护进程的 Token 控制谁能够**指挥**守护进程，而不控制服务器能够**做什么**。stdio 服务器拥有你的全部用户权限。如需限制一个你并不完全信任的服务器，可以将 stdio 命令放在容器中运行：
+
+```bash
+mcpdo connect @sandboxed -- docker run -i --rm --network none -v "$PWD:/work:ro" <server-image>
+```
+
+如果没有 `@sandboxed`，连接将被命名为 `docker`。
+
+请根据服务器需要调整网络和挂载参数。HTTP 与 SSE 服务器不运行本地代码，因此不需要进程隔离。
+
+## 环境变量
+
+`mcpdo` 读取与其他客户端相同的 Catalog、存储和密钥存储变量（见[环境变量](/docs/2026-07-28/tools/inspector/configuration#environment-variables)），此外还读取以下变量：
+
+| 变量                       | 效果                                                                                                                                                                                 |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MCP_INSPECTOR_DAEMON_DIR`     | 存放守护进程 socket、锁、Token 和日志的目录。设置了 `MCP_STORAGE_DIR` 时默认使用该目录，否则为 `~/.mcp-inspector`。由 `mcpdo private` 设置。                                   |
+| `MCP_INSPECTOR_DAEMON_TOKEN`   | 用于连接或启动守护进程的 IPC Token。未设置时，启动守护进程的 `mcpdo` 命令会生成一个，守护进程再将其写入 `mcpdod.token`。由 `mcpdo private` 设置。 |
+| `MCP_ALLOW_DEFAULT_CONNECTION` | 设置为 `1` 后，即使 stdin 不是 TTY，不带 `@name` / `--connection` 的命令也可使用最近使用的连接。                                                                |
+
+## 在编程智能体中使用 mcpdo
+
+软件包附带一项智能体技能，指导智能体操作 `mcpdo`：由它持有的连接可以扩展智能体的工具集，智能体也会了解如何转交登录 URL，以及回答暂停的信息征询。`mcpdo agent-help` 输出指南，`mcpdo agent-help --skill-path` 输出可安装技能文件的路径，`mcpdo agent-help --instructions` 则输出一段可追加到项目 `CLAUDE.md` 或 `AGENTS.md` 中的说明。

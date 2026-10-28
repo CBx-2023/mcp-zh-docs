@@ -1,0 +1,236 @@
+---
+title: CLI 客户端
+description: "Scripting the MCP Inspector: methods, output formats, exit codes, and CI recipes"
+---
+
+CLI 每次运行都会连接服务器，调用你通过 `--method` 指定的单个请求，输出结果后退出。因此，它很适合 CI 流水线、Shell 单行命令，以及需要立即验证服务器改动的编程智能体。
+
+```bash
+npx @modelcontextprotocol/inspector --cli node build/index.js --method tools/list
+```
+
+<Tip>
+  需要针对同一个服务器运行多条命令，或执行跨越同一会话的流程（任务、订阅、信息征询）吗？[mcpdo 连接客户端](/docs/2026-07-28/tools/inspector/mcpdo) 只连接一次，并在不同命令之间保持连接。
+</Tip>
+
+以下示例使用已安装的 `mcp-inspector` 可执行程序。若未全局安装，可以像上面那样，改用 `npx @modelcontextprotocol/inspector` 作为每条命令的前缀。
+
+## 选择服务器
+
+CLI 接受位置参数命令（stdio）、`--server-url`（HTTP/SSE），或 Catalog、config 文件中的具名服务器：
+
+```bash
+# stdio: everything positional is the command to spawn
+mcp-inspector --cli node build/index.js --method tools/list
+
+# HTTP
+mcp-inspector --cli https://api.example.com/mcp --transport http --method tools/list
+
+# From a file
+mcp-inspector --cli --config ./mcp.json --server myserver --method tools/list
+```
+
+服务器来自文件时，其专属设置（请求头、超时、OAuth、[协议时代](/docs/2026-07-28/tools/inspector/protocol-eras)和根目录）会应用到连接上，解析规则与 TUI、Web 客户端完全一致。`--header` 参数只会在本次运行中覆盖文件中的请求头，超时和 OAuth 设置则保持不变。
+
+后面的示例会将你使用的上述任一种形式，连同它的 `--transport` 或 `--config`/`--server` 参数，一并简写为 `<server>`。
+
+<Note>
+  **配置文件是为一次运行持久提供[根目录](/specification/draft/client/roots)的唯一方式：** 没有设置根目录的命令行参数，CLI 也没有 `roots/set` 方法。为服务器配置的根目录会在连接时声明，因此，调用 `roots/list` 的服务器就能获取它们；例如，`@modelcontextprotocol/server-filesystem` 会通过该方法了解获准访问的目录。
+</Note>
+
+有关 `--catalog` 与 `--config` 的区别、`--` 分隔符，以及共享的服务器选择参数，详见[配置与参数](/docs/2026-07-28/tools/inspector/configuration)。
+
+## 方法
+
+| `--method`                 | 必须搭配的参数                                            | 说明                                                                                   |
+| -------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `initialize`               | 无                                                           | 仅连接探测：`{serverInfo, protocolVersion, capabilities, instructions}`。        |
+| `tools/list`               | 无                                                           | `--strict` 将 Schema 可移植性检查变为准入检查（见 [CI 检查门禁](#ci-gates)）。  |
+| `tools/call`               | `--tool-name`，以及可选的 `--tool-arg` / `--tool-args-json` |                                                                                         |
+| `resources/list`           | 无                                                           |                                                                                         |
+| `resources/read`           | `--uri`                                                        |                                                                                         |
+| `resources/templates/list` | 无                                                           |                                                                                         |
+| `resources/directory/read` | `--uri`，以及可选的 `--cursor`                              | 每次获取一页；将上一页的 `nextCursor` 传回。                         |
+| `prompts/list`             | 无                                                           |                                                                                         |
+| `prompts/get`              | `--prompt-name`，以及可选的 `--prompt-args`                 |                                                                                         |
+| `logging/setLevel`         | `--log-level`                                                  | 仅限旧版协议时代；现代服务器改为通过每个请求选择是否启用。                             |
+| `skills/list`              | 无                                                           | `--verify` 检查返回的技能（见 [CI 检查门禁](#ci-gates)）。                      |
+| `skills/get`               | `--uri`                                                        | 同样支持 `--verify` 选项。                                                                 |
+| `servers/list`             | 无                                                           | 读取 Catalog，**不会连接**任何服务器。                                    |
+| `servers/show`             | `--server`                                                     | 同上，但只读取一个条目。                                                                    |
+| `servers/add`              | `--server`，以及位置参数目标或 `--server-url`         | 写入 Catalog，不建立连接（见[编辑 Catalog](#editing-the-catalog)）。 |
+| `servers/edit`             | `--server`，以及要修改的内容                                | 同上。                                                                                   |
+| `servers/remove`           | `--server`                                                     | 同上。                                                                                   |
+
+仅适用于流或会话的方法（例如 `logging/tail`）会被拒绝，因为一个即将退出的进程无法持续保持流连接。
+
+### 传递参数
+
+`--tool-arg` 接受 `key=value`。对于可以解析为 JSON 的值，它会通过 JSON 解析进行**类型转换**，因此 `count=1` 和 `zip=10001` 都会发送数字。无效 JSON（例如 `zip=012` 或不带引号的单词）则先作为字符串发送，再根据工具输入 Schema 为该属性声明的类型转换；因此，若 `zip` 的类型是数字，`zip=012` 最终仍会发送 `12`：
+
+```bash
+mcp-inspector --cli <server> --method tools/call --tool-name mytool \
+  --tool-arg key=value --tool-arg count=1 --tool-arg 'options={"format":"json"}'
+```
+
+`--tool-args-json` 一次接受完整的参数对象，跳过 `key=value` 解析，因此 `{"zip":"10001"}` 会发送字符串 `"10001"`，而非数字。不过，Schema 类型转换仍会应用于字符串值，因此只有当 Schema 将该属性声明为字符串（或未声明该属性）时，字符串才会保持为字符串。这两个参数互斥：
+
+```bash
+mcp-inspector --cli <server> --method tools/call --tool-name mytool \
+  --tool-args-json '{"zip":"10001"}'
+```
+
+## 输出
+
+`--format text`（默认）会输出便于人类阅读的格式。`--format json` 则只在 stdout 输出一个 JSON 对象，不附带横幅，因此可以将完整输出直接传入管道：
+
+```bash
+mcp-inspector --cli <server> --method tools/list --format json | jq '.result.tools[].name'
+```
+
+## 探测 MCP Apps
+
+`--app-info` 会报告工具是否附带 [MCP App](/extensions/apps/overview) UI（包括对应的 `ui://` 资源、CSP 和权限），并且**不会调用工具**，让流水线能够在执行任何操作之前，决定是否需要浏览器：
+
+```bash
+# One tool -> one JSON line
+mcp-inspector --cli <server> --method tools/call --tool-name my_tool --app-info
+# {"hasApp":true,"toolName":"my_tool","resourceUri":"ui://...","csp":{...},"permissions":{...}}
+
+# Every tool -> NDJSON, one line each, over a single connection
+mcp-inspector --cli <server> --method tools/list --app-info | jq -c 'select(.hasApp)'
+```
+
+退出码可以区分不同结果：附带应用的工具退出码为 `0`，不带应用的工具为 `2`，工具不存在则为 `5`，避免把拼写错误误认为“不带应用”。探测失败（例如无法读取 UI 资源，或 `resourceUri` 格式不正确）会记录在 `resourceError` 字段中，而不会中断操作，因此单个异常工具不会导致整个列表获取失败。
+
+CLI 无法呈现 App，因此默认不会在 `initialize` 时声明 MCP Apps 扩展。如果服务器只向声明支持 App 的客户端提供 App 工具，此时它就会看起来不带应用（退出码 `2`）。添加 `--advertise-apps`，即可在本次运行中声明该扩展。
+
+<Note>
+  无论使用何种 `--format`，`tools/list --app-info` 始终输出 NDJSON（每行一个工具）；`--format json` 只会改变 `tools/call --app-info` 的单工具输出结构。
+</Note>
+
+## 退出码与错误包装
+
+每个非零退出码都对应一个稳定的失败类别，让调用方能够根据 _失败原因_ 分支处理，而无需抓取说明文字：
+
+| 退出码 | 含义                                                                                              |
+| ---- | ---------------------------------------------------------------------------------------------------- |
+| `0`  | 成功。                                                                                             |
+| `1`  | 用法错误或未预期的错误（兜底类别），包括无法读取密钥存储或 OAuth 状态文件。 |
+| `2`  | 工具上未发现 MCP App（`--app-info` 探测）。                                                   |
+| `3`  | 服务器要求身份验证（HTTP 401/403，或 SDK 授权错误）。                        |
+| `4`  | 无法访问服务器（DNS、连接被拒绝、超时、`fetch failed`）。                               |
+| `5`  | 工具错误：`tools/call` 返回 `isError: true`，或未找到工具。                         |
+| `6`  | `--strict` 发现了错误级别的工具 Schema 可移植性问题。                                  |
+| `7`  | `--verify` 发现某个技能违反 SEP-2640（符合性、摘要或大小不匹配）。             |
+| `8`  | `--verify` 未能在读取上限内检查完全部技能。                                        |
+| `9`  | `--verify --require-digests` 发现某个技能未声明任何摘要。                               |
+
+每次非零退出时，CLI 还会向 **stderr 写入单行 JSON**：
+
+```json
+{
+  "error": {
+    "code": "auth_required",
+    "message": "Unauthorized",
+    "status": 401,
+    "url": "https://api.example/mcp"
+  }
+}
+```
+
+包装对象始终包含 `code` 和 `message`，并在已知时提供 `cause`（底层错误，例如 DNS 失败）、`status`（HTTP 状态）和 `url`。URL 查询字符串中的密钥信息会被隐去。`code` 是稳定的失败名称，例如 `auth_required`、`unreachable`、`tool_not_found`、`tool_is_error`、`no_app`、`schema_unportable`、`store_unavailable`、`oauth_state_unrecognized`，或兜底的 `error` 等。
+
+由于只有一行，调用方可以通过 `2>&1 | tail -1 | jq .error` 解析它。
+
+返回 `isError: true` 的 `tools/call` 仍然会输出载荷，但退出码为 `5`，因此使用 `&&` 串联的命令不会在调用失败后继续执行。
+
+## 脚本中的授权
+
+默认情况下，CLI 使用与 TUI 相同的回环 OAuth 流程：打开浏览器，等待 localhost 回调，而 CI 作业无法完成这一流程。以下两个参数可以让非交互式运行的行为更可预测：
+
+- `--stored-auth-only`：绝不启动交互式 OAuth 或权限提升，也绝不自动打开浏览器。如果共享存储中存在 Token，就使用它；否则立即以 `auth_required` 失败退出。这是 CI 应使用的参数。
+- `--use-stored-auth`：复用 Web Inspector 已在本机获取的 Token；如果存有刷新令牌，会先刷新。它按 URL 查找 Token，因此要求提供 `--server-url`。
+
+如果两者都未指定，并且 stdin、stderr 都不是 TTY，CLI 会立即以 `auth_required` 失败退出，而不是等待 15 分钟，挂在无人会完成的回调上。
+
+完整流程、Web 到 CLI 的交接，以及 `--print-handoff`，详见[授权](/docs/2026-07-28/tools/inspector/authorization)。
+
+## 实践指南
+
+### 在 CI 中验证服务器
+
+```bash
+set -euo pipefail
+
+# Fail the build if the server can't be reached or doesn't expose the tool
+mcp-inspector --cli --config ./ci-servers.json --server my-server \
+  --stored-auth-only --method tools/list --format json \
+  | jq -e '.result.tools | map(.name) | index("get_weather")' > /dev/null
+```
+
+### CI 检查门禁
+
+三个参数可以让检查失败转化为非零退出码，且各有独立退出码，方便作业区分失败原因：
+
+- `--strict`（搭配 `tools/list`）：在 stderr 中完整报告工具 Schema 可移植性问题（路径、问题、建议修复方式）；如果存在错误级别的问题，退出码为 `6`。不启用时，`tools/list` 只输出一行数量统计。使用 `--format json` 时，检查结果会并入输出的 `schemaFindings` 中。
+- `--verify`（搭配 `skills/list` 或 `skills/get`）：运行 SEP-2640 符合性与摘要检查，在 stdout 为每个技能输出一份 JSON 报告；存在违规时退出码为 `7`，因读取上限而未能检查完全部技能时为 `8`。`--skill-catalog-max-skills` 和 `--skill-catalog-max-bytes` 用于设置这些上限。
+- `--require-digests`（搭配 `--verify`）：对于未声明摘要的技能，以退出码 `9` 退出，而不是将其报告为无法验证后以 `0` 退出。
+
+```bash
+mcp-inspector --cli <server> --method tools/list --strict > /dev/null
+mcp-inspector --cli <server> --method skills/list --verify --require-digests
+```
+
+### 根据失败类别分支处理
+
+```bash
+if out=$(mcp-inspector --cli "$URL" --transport http --method tools/list 2>err.json); then
+  echo "$out"
+else
+  case $? in
+    3) echo "needs auth: run the web inspector once to sign in" ;;
+    4) echo "server unreachable" ;;
+    *) jq .error < err.json ;;
+  esac
+fi
+```
+
+### 对所有带 UI 的工具进行冒烟测试
+
+```bash
+mcp-inspector --cli "$URL" --transport http --method tools/list --app-info \
+  | jq -r 'select(.hasApp) | .toolName'
+```
+
+### 不建立连接，直接检查 Catalog
+
+```bash
+mcp-inspector --cli --catalog ~/.mcp-inspector/mcp.json --method servers/list
+mcp-inspector --cli --catalog ~/.mcp-inspector/mcp.json --method servers/show --server my-server
+```
+
+<Warning>
+  `servers/show` 会隐去含密钥信息的字段（`env` 值、敏感请求头、OAuth Client Secret），但**不会**清除嵌入服务器 `url`（userinfo 或查询参数 Token）或 stdio `args` 中的凭据。将内容粘贴到 issue 之前，请将原始 URL 和 `detail` 字段视为敏感信息处理。
+</Warning>
+
+### 编辑 Catalog
+
+`servers/add`、`servers/edit` 和 `servers/remove` 会写入 Catalog，而不会连接任何服务器。它们与 Web 客户端的服务器列表共用同一套代码，因此 `env` 值和 Client Secret 会像通过 UI 操作一样进入[密钥存储](/docs/2026-07-28/tools/inspector/configuration#where-secrets-are-stored)，正在运行的 Web 客户端也会发现这些变更。
+
+```bash
+# Add: the positional target or --server-url describes the entry, not a server to connect to
+mcp-inspector --cli node build/index.js -e API_KEY=secret --method servers/add --server my-server
+
+# Edit: change the target, -e, --cwd, --header, or --protocol-era, or rename it
+mcp-inspector --cli --method servers/edit --server my-server --rename my-renamed-server
+
+# Remove the entry and its stored secrets
+mcp-inspector --cli --method servers/remove --server my-renamed-server
+```
+
+只有可写 Catalog（通过 `--catalog`、`MCP_CATALOG_PATH` 或默认值指定）才能写入；`--config` 会被拒绝。如果密钥仅存于内存，提供 `-e` 值的写入操作（以及 `--rename`）会被拒绝，因为这些密钥信息会在本次运行退出后丢失。
+
+## 代理
+
+连接远程 HTTP/SSE 服务器时，会遵循常见的代理环境变量：`HTTPS_PROXY` / `HTTP_PROXY`（及其小写形式）用于选择代理，`NO_PROXY` 用于排除指定主机。无需任何 Inspector 专属参数；代理 Agent 会延迟加载，因此未使用代理的运行不会产生相关开销。Web 客户端的后端同样如此。

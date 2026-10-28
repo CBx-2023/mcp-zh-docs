@@ -1,0 +1,194 @@
+---
+title: MCP Inspector
+description: Interactive developer tooling for testing and debugging MCP servers, in the browser, on the command line, and in the terminal
+---
+
+[MCP Inspector](https://github.com/modelcontextprotocol/inspector) 是用于测试和调试 [MCP Server](/docs/2026-07-28/learn/server-concepts) 的参考开发工具。它以单一软件包 `@modelcontextprotocol/inspector` 发布，**一个可执行程序提供三种客户端**：
+
+| 客户端  | 启动命令                                  | 用途                                                                     |
+| ------- | ------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Web** | `npx @modelcontextprotocol/inspector`       | 浏览器中的完整图形化 Inspector，也是默认且功能最丰富的界面。  |
+| **CLI** | `npx @modelcontextprotocol/inspector --cli` | 可编写脚本、输出便于机器读取的客户端，适用于 CI、Shell 管道和编程智能体。 |
+| **TUI** | `npx @modelcontextprotocol/inspector --tui` | 交互式终端界面，适用于无法或不希望使用浏览器的场景。         |
+
+三者基于同一套共享核心构建，因此连接行为完全一致：使用相同的传输方式、配置文件、磁盘 OAuth 状态，以及相同的[协议时代](/docs/2026-07-28/tools/inspector/protocol-eras)协商机制（旧版与现代的 2026-07-28 版本）。
+
+该软件包还会安装 **`mcpdo`**，这是基于同一核心构建的实验性[连接客户端](/docs/2026-07-28/tools/inspector/mcpdo)：它只连接服务器一次，并在多次命令调用之间保持连接。
+
+<Frame caption="工具调用后的 MCP Inspector Web 客户端：监控侧栏已固定并加宽，便于操作时清晰查看 JSON-RPC 交互。">
+  <img src="/images/inspector/web-monitor-sidebar.png" />
+</Frame>
+
+## 快速入门
+
+Inspector 要求 **Node 22.19.0 或更高版本**，可以通过 `npx` 直接运行，无需安装：
+
+<Tabs>
+  <Tab title="Web">
+
+```bash
+# Launch the web UI and connect to a local stdio server
+npx @modelcontextprotocol/inspector node path/to/server/index.js
+
+# Or launch with no target and add servers from the UI
+npx @modelcontextprotocol/inspector
+```
+
+该命令会输出一个包含本次启动专用 API Token 的 URL，并在浏览器中打开它（设置 `MCP_AUTO_OPEN_ENABLED=false` 可阻止自动打开）。详见 [Web 客户端](/docs/2026-07-28/tools/inspector/web)。
+
+  </Tab>
+  <Tab title="CLI">
+
+```bash
+# List a server's tools and exit
+npx @modelcontextprotocol/inspector --cli node path/to/server/index.js --method tools/list
+
+# Call a tool and pipe the result into jq
+npx @modelcontextprotocol/inspector --cli https://api.example.com/mcp --transport http \
+  --method tools/call --tool-name get_weather --tool-arg city=Boston --format json | jq .result
+```
+
+详见 [CLI 客户端](/docs/2026-07-28/tools/inspector/cli)。
+
+  </Tab>
+  <Tab title="TUI">
+
+```bash
+npx @modelcontextprotocol/inspector --tui node path/to/server/index.js
+```
+
+详见 [TUI 客户端](/docs/2026-07-28/tools/inspector/tui)。
+
+  </Tab>
+</Tabs>
+
+### 检查已发布的服务器
+
+将启动服务器的命令作为 Inspector 的参数传入，或使用 `--server-url` 指向远程服务器：
+
+<Tabs>
+  <Tab title="npm 软件包">
+
+```bash
+npx -y @modelcontextprotocol/inspector npx @modelcontextprotocol/server-filesystem ~/Desktop
+```
+
+  </Tab>
+  <Tab title="PyPI 软件包">
+
+```bash
+npx @modelcontextprotocol/inspector uvx mcp-server-git --repository ~/code/mcp/servers.git
+```
+
+  </Tab>
+  <Tab title="远程 HTTP 服务器">
+
+```bash
+npx @modelcontextprotocol/inspector --server-url https://api.example.com/mcp --transport http
+```
+
+  </Tab>
+</Tabs>
+
+请始终先阅读服务器自己的 README，因为每个服务器所需的命令和参数都不同。
+
+<Warning>
+  **如果操作系统钥匙串可用，Inspector 会将密钥信息（OAuth Token、OAuth Client Secret 和 stdio 的 `env:` 值）存入钥匙串。** 如果机器没有可用的钥匙串（例如未安装 libsecret 或 Secret Service 的 Linux、无界面和 SSH 会话、Termux，以及挂载了卷的容器），这些信息会改存到 `~/.mcp-inspector/secrets.json`，**除非你提供密钥，否则不会加密**。有关恢复钥匙串、加密文件或仅将密钥信息保留在内存中的方法，请参阅[密钥信息存储在哪里](/docs/2026-07-28/tools/inspector/configuration#where-secrets-are-stored)。
+</Warning>
+
+## 启动器参数与客户端参数
+
+`mcp-inspector` 是 `npx @modelcontextprotocol/inspector` 实际运行的可执行程序，它只是一个精简的启动器，仅负责两件事：
+
+1. **模式参数：** `--web`（默认）、`--cli` 或 `--tui`。最多只能指定一种；同时传入两种会报错 `Specify at most one of --web, --cli, or --tui.`
+2. **`-h` / `--help`。**
+
+其余参数（`--catalog`、`--config`、`--server-url`、`--transport`、`--method` 以及 OAuth 参数）均由 _客户端_ 定义，而非启动器定义，而且不同客户端支持的参数集合也不完全相同。[配置与参数](/docs/2026-07-28/tools/inspector/configuration)页面因此按参数所属的组件组织内容。
+
+<Note>
+模式参数仅在命令行开头识别：遇到第一个不是 `--web` / `--cli` / `--tui` 的词元后，启动器就停止解析，并将余下内容原样转交给客户端。因此，后面仍然可以出现字面量 `--cli`，作为服务器自己的参数：
+
+```bash
+mcp-inspector --cli node server.js --cli   # mode is CLI; the trailing --cli goes to server.js
+```
+
+</Note>
+
+<Note>
+  是否指定模式参数，会影响 `--help` 的行为。未指定模式时，命令行中任何位置的 `-h`/`--help`（包括服务器命令之后）都会输出启动器帮助并退出。指定模式后，它会被转交给对应客户端，因此 `mcp-inspector --cli --help` 会输出 CLI 的完整参数参考。
+</Note>
+
+## 后续阅读
+
+<CardGroup cols={2}>
+  <Card
+    title="Web 客户端"
+    icon="browser"
+    href="/docs/2026-07-28/tools/inspector/web"
+  >
+    逐个标签页了解图形化 Inspector。
+  </Card>
+  <Card
+    title="CLI 客户端"
+    icon="terminal"
+    href="/docs/2026-07-28/tools/inspector/cli"
+  >
+    方法参考、输出格式、退出码和 CI 实践。
+  </Card>
+  <Card
+    title="TUI 客户端"
+    icon="table-columns"
+    href="/docs/2026-07-28/tools/inspector/tui"
+  >
+    终端导航和键盘操作参考。
+  </Card>
+  <Card
+    title="配置与参数"
+    icon="sliders"
+    href="/docs/2026-07-28/tools/inspector/configuration"
+  >
+    Catalog 与 config 文件的区别、各客户端的完整参数参考，以及环境变量。
+  </Card>
+  <Card
+    title="授权"
+    icon="lock"
+    href="/docs/2026-07-28/tools/inspector/authorization"
+  >
+    完整 OAuth 流程、会话期间重新授权，以及回环地址回调。
+  </Card>
+  <Card
+    title="协议时代"
+    icon="code-branch"
+    href="/docs/2026-07-28/tools/inspector/protocol-eras"
+  >
+    旧版与现代（2026-07-28）协议下的操作方式，以及各标签页在不同协议时代中的变化。
+  </Card>
+  <Card
+    title="mcpdo 连接客户端"
+    icon="plug"
+    href="/docs/2026-07-28/tools/inspector/mcpdo"
+  >
+    连接一次，然后针对具名连接运行多条命令。
+  </Card>
+  <Card
+    title="安全"
+    icon="shield-halved"
+    href="/docs/2026-07-28/tools/inspector/security"
+  >
+    威胁模型：Web 后端的 Token、Docker、密钥信息存储、stdio 服务器，以及 mcpdo 守护进程。
+  </Card>
+  <Card
+    title="实践指南"
+    icon="book"
+    href="/docs/2026-07-28/tools/inspector/recipes"
+  >
+    导入客户端配置、审查 MCP Apps、使用 Docker，以及通过网络托管。
+  </Card>
+  <Card
+    title="调试指南"
+    icon="bug"
+    href="/docs/2026-07-28/tools/debugging"
+  >
+    Inspector 之外更广泛的调试策略。
+  </Card>
+</CardGroup>

@@ -1,1 +1,4 @@
-<figure class="mint-frame"><slot /></figure>
+---
+interface Props {caption?:string;style?:string|Record<string,string|number>;}
+---
+<figure class="mint-frame" style={Astro.props.style}><slot />{Astro.props.caption&&<figcaption>{Astro.props.caption}</figcaption>}</figure>

@@ -3,8 +3,167 @@
   "version": "2026-07-28",
   "repository": "https://github.com/CBx-2023/mcp-zh-docs",
   "pages": [
-    { "path": "docs/2026-07-28/getting-started/intro", "label": "什么是 MCP？", "description": "理解 Model Context Protocol，开始连接 AI 与外部世界。", "status": "sample" },
-    { "path": "docs/2026-07-28/learn/architecture", "label": "架构概览", "description": "从 Host、Client 和 Server，到协议分层、工具调用与通知。", "status": "sample" },
-    { "path": "docs/2026-07-28/develop/build-server", "label": "构建 MCP Server", "description": "使用八种语言构建天气服务，并连接 Claude Desktop。", "status": "sample" }
+    {
+      "path": "docs/2026-07-28/getting-started/intro",
+      "label": "什么是 MCP？",
+      "description": "什么是 MCP？",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/learn/architecture",
+      "label": "架构概览",
+      "description": "架构概览",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/learn/server-concepts",
+      "label": "服务器",
+      "description": "服务器",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/learn/client-concepts",
+      "label": "客户端",
+      "description": "客户端",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/learn/versioning",
+      "label": "版本管理",
+      "description": "版本管理",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/develop/connect-local-servers",
+      "label": "连接本地 MCP Server",
+      "description": "连接本地 MCP Server",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/develop/connect-remote-servers",
+      "label": "连接远程 MCP Server",
+      "description": "连接远程 MCP Server",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/develop/build-with-agent-skills",
+      "label": "借助 Agent Skills 构建",
+      "description": "借助 Agent Skills 构建",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/develop/build-server",
+      "label": "构建 MCP Server",
+      "description": "构建 MCP Server",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/develop/build-client",
+      "label": "构建 MCP Client",
+      "description": "构建 MCP Client",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/develop/clients/client-best-practices",
+      "label": "客户端最佳实践",
+      "description": "客户端最佳实践",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/sdk",
+      "label": "SDK",
+      "description": "SDK",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tutorials/security/authorization",
+      "label": "理解 MCP 授权",
+      "description": "理解 MCP 授权",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tutorials/security/security_best_practices",
+      "label": "安全最佳实践",
+      "description": "安全最佳实践",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tutorials/security/local-server-security",
+      "label": "本地服务器安全",
+      "description": "本地服务器安全",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tools/inspector",
+      "label": "概览",
+      "description": "概览",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tools/inspector/web",
+      "label": "Web 客户端",
+      "description": "Web 客户端",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tools/inspector/cli",
+      "label": "CLI 客户端",
+      "description": "CLI 客户端",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tools/inspector/tui",
+      "label": "TUI 客户端",
+      "description": "TUI 客户端",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tools/inspector/mcpdo",
+      "label": "mcpdo 连接客户端",
+      "description": "mcpdo 连接客户端",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tools/inspector/configuration",
+      "label": "配置与参数",
+      "description": "配置与参数",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tools/inspector/authorization",
+      "label": "授权",
+      "description": "授权",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tools/inspector/protocol-eras",
+      "label": "协议时代",
+      "description": "协议时代",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tools/inspector/recipes",
+      "label": "实践指南",
+      "description": "实践指南",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tools/inspector/security",
+      "label": "安全",
+      "description": "安全",
+      "status": "translated"
+    },
+    {
+      "path": "docs/2026-07-28/tools/debugging",
+      "label": "调试",
+      "description": "调试",
+      "status": "translated"
+    },
+    {
+      "path": "examples",
+      "label": "服务器示例",
+      "description": "服务器示例",
+      "status": "translated"
+    }
   ]
 }

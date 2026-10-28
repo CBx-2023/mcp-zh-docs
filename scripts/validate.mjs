@@ -10,7 +10,10 @@ for (const f of manifest.files) {
   assert.equal(sha(await readFile(`upstream/${f.path}`)), f.sha256, `Source snapshot changed: ${f.path}`);
 }
 for(const asset of manifest.assets??[]) assert.equal(sha(await readFile(asset.path)),asset.sha256,`Source asset changed: ${asset.path}`);
-for (const page of site.pages) {
+for(const anchor of manifest.anchors??[]) assert.equal(sha(await readFile(anchor.path)),anchor.sha256,`Source anchors changed: ${anchor.path}`);
+const requested=process.argv.slice(2);
+const pages=requested.length?requested.map(path=>({path})):site.pages;
+for (const page of pages) {
   const en = await readFile(sourcePath(page), 'utf8');
   const zh = await readFile(translatedPath(page), 'utf8');
   const enTree = parser.parse(en), zhTree = parser.parse(zh);
@@ -23,14 +26,14 @@ for (const page of site.pages) {
     }
     if (node.type === 'link' || node.type === 'image') delete item.title;
     if (node.attributes) item.attributes = node.attributes.map(a => {
-      if (a.type === 'mdxJsxAttribute' && ['title','tip','alt','aria-label'].includes(a.name) && typeof a.value === 'string') return { name: a.name, value: '<translated>' };
+      if (a.type === 'mdxJsxAttribute' && ['title','tip','alt','aria-label','caption'].includes(a.name) && typeof a.value === 'string') return { name: a.name, value: '<translated>' };
       return { name: a.name, value: typeof a.value === 'object' ? a.value?.value : a.value };
     });
     if (['inlineCode', 'code', 'mdxFlowExpression', 'mdxTextExpression', 'mdxjsEsm'].includes(node.type)) item.value = node.value;
     if (node.children) {
       item.children = node.children.map(shape).filter(Boolean);
       // Chinese word order may move inline links/code within the same paragraph.
-      if (['paragraph','heading','mdxJsxTextElement'].includes(node.type)) item.children.sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
+      if (['paragraph','heading','tableCell','mdxJsxTextElement'].includes(node.type)) item.children.sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
     }
     return item;
   };
